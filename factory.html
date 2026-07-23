@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>惠州厂房出租信息管理</title>
+
+    <!-- ==================== PWA 移动端主屏标签 ==================== -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="厂房管理">
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'>
+            <rect width='180' height='180' rx='36' fill='%231a56db'/>
+            <text x='90' y='120' font-size='100' text-anchor='middle' fill='white'>🏭</text>
+        </svg>">
+    <meta name="theme-color" content="#1a56db">
+    <link rel="icon" sizes="192x192" href="data:image/svg+xml,
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'>
+            <rect width='192' height='192' rx='38' fill='%231a56db'/>
+            <text x='96' y='128' font-size='105' text-anchor='middle' fill='white'>🏭</text>
+        </svg>">
+
+    <!-- ==================== Pico.css ==================== -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+
+    <style>
+        :root {
+            --card-gap: 1.25rem;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.15);
+            --transition: 0.2s ease;
+        }
+        body { min-height: 100vh; background: #f5f6fa; padding-bottom: 3rem; }
+
+        .app-header {
+            background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+            color: #fff; padding: 1.5rem 0; margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md); position: sticky; top: 0; z-index: 100;
+        }
+        .app-header .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+        .app-header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+        .app-header h1::before { content: '🏭'; font-size: 1.6rem; }
+        .header-stats { display: flex; gap: 1.5rem; font-size: 0.9rem; opacity: 0.9; }
+        .header-stats span { background: rgba(255,255,255,0.15); padding: 0.35rem 0.85rem; border-radius: 20px; white-space: nowrap; }
+        .header-stats strong { font-weight: 700; }
+
+        .pwa-banner {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+            border: 1px solid #ffc107; border-radius: var(--border-radius);
+            padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+            display: flex; align-items: flex-start; gap: 0.75rem;
+            font-size: 0.9rem; line-height: 1.6; box-shadow: var(--shadow-sm);
+        }
+        .pwa-banner .pwa-icon { font-size: 2rem; flex-shrink: 0; }
+        .pwa-banner .pwa-content strong { color: #b45309; }
+        .pwa-banner .pwa-content .steps { margin: 0.4rem 0 0; padding: 0; list-style: none; color: #92400e; }
+        .pwa-banner .pwa-close { flex-shrink: 0; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #b45309; padding: 0.2rem 0.4rem; border-radius: 6px; opacity: 0.6; }
+        .pwa-banner .pwa-close:hover { opacity: 1; }
+
+        .filter-bar { background: #fff; border-radius: var(--border-radius); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; }
+        .filter-bar .grid { align-items: end; gap: 0.75rem; }
+        .filter-bar label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; color: #555; }
+        .filter-bar input, .filter-bar select { margin-bottom: 0; }
+        .rent-range-group { display: flex; align-items: center; gap: 0.5rem; }
+        .rent-range-group input { flex: 1; min-width: 0; }
+        .rent-range-group span { color: #999; font-size: 0.9rem; flex-shrink: 0; }
+        .filter-actions { display: flex; gap: 0.5rem; align-items: end; }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem; }
+        .toolbar .add-btn { font-size: 1rem; font-weight: 600; padding: 0.7rem 1.5rem; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--card-gap); }
+
+        .factory-card {
+            background: #fff; border-radius: var(--border-radius); padding: 1.5rem;
+            box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1;
+            transition: box-shadow var(--transition), transform var(--transition);
+            display: flex; flex-direction: column; gap: 0.65rem; overflow: hidden;
+        }
+        .factory-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .factory-card .card-title { font-size: 1.15rem; font-weight: 700; color: #1a56db; margin: 0; }
+        .factory-card .card-image { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f0f0f0; }
+        .factory-card .card-image:hover { opacity: 0.85; }
+        .factory-card .card-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.88rem; color: #666; }
+        .factory-card .card-meta .tag { display: inline-block; background: #eff6ff; color: #1a56db; padding: 0.2rem 0.65rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; }
+        .factory-card .card-contact { font-size: 0.9rem; color: #444; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .factory-card .card-contact a { color: #1a56db; text-decoration: none; font-weight: 500; }
+        .factory-card .card-notes { font-size: 0.85rem; color: #777; background: #f9fafb; padding: 0.6rem 0.75rem; border-radius: 8px; line-height: 1.5; word-break: break-all; max-height: 100px; overflow-y: auto; }
+        .factory-card .card-notes:empty { display: none; }
+        .factory-card .card-actions { display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid #f0f0f0; }
+        .factory-card .card-actions button { flex: 1; font-size: 0.85rem; padding: 0.45rem 0.75rem; }
+
+        .image-viewer { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.9); cursor: pointer; justify-content: center; align-items: center; padding: 1rem; }
+        .image-viewer.active { display: flex; }
+        .image-viewer img { max-width: 95vw; max-height: 95vh; border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); border: 2px dashed #ddd; }
+        .empty-state .empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .empty-state h3 { color: #888; margin-bottom: 0.5rem; }
+        .empty-state p { color: #aaa; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: flex-start; padding: 2rem 1rem; overflow-y: auto; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; }
+        .modal-dialog { background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 620px; padding: 2rem; animation: modalSlideIn 0.25s ease; margin: auto; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-dialog h2 { margin-top: 0; margin-bottom: 1.5rem; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem; }
+        .modal-dialog .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-dialog label { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
+        .modal-dialog label .required { color: #e53e3e; }
+        .modal-dialog input, .modal-dialog select, .modal-dialog textarea { margin-bottom: 0; }
+        .modal-dialog .form-group { margin-bottom: 1rem; }
+
+        .image-upload-area { border: 2px dashed #cbd5e0; border-radius: var(--border-radius); padding: 1.25rem; text-align: center; background: #fafbfc; transition: border-color var(--transition), background var(--transition); }
+        .image-upload-area:hover, .image-upload-area.drag-over { border-color: #1a56db; background: #eff6ff; }
+        .image-upload-area .upload-hint { color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .image-upload-area .upload-hint .icon { font-size: 2rem; display: block; margin-bottom: 0.35rem; }
+        .image-upload-area .upload-actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+        .image-upload-area .upload-actions button { font-size: 0.85rem; padding: 0.5rem 1rem; }
+        .upload-status { font-size: 0.82rem; margin-top: 0.5rem; min-height: 1.2em; }
+        .upload-status.loading { color: #1a56db; }
+        .upload-status.success { color: #16a34a; }
+        .upload-status.error   { color: #dc2626; }
+
+        .image-preview-wrap { display: none; margin-top: 0.75rem; position: relative; border-radius: 8px; overflow: hidden; max-width: 100%; }
+        .image-preview-wrap.has-image { display: inline-block; }
+        .image-preview-wrap img { max-width: 100%; max-height: 200px; display: block; border-radius: 8px; object-fit: cover; }
+        .image-preview-wrap .remove-image { position: absolute; top: 4px; right: 4px; background: rgba(220,38,38,0.9); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .image-preview-wrap .remove-image:hover { background: #dc2626; }
+
+        .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1100; justify-content: center; align-items: center; padding: 1rem; backdrop-filter: blur(2px); }
+        .confirm-overlay.active { display: flex; }
+        .confirm-dialog { background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); padding: 2rem; max-width: 400px; width: 100%; text-align: center; animation: modalSlideIn 0.2s ease; }
+        .confirm-dialog .confirm-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+        .confirm-dialog h3 { margin-bottom: 0.5rem; }
+        .confirm-dialog p { color: #888; margin-bottom: 1.5rem; }
+        .confirm-actions { display: flex; gap: 0.75rem; justify-content: center; }
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #eee; }
+
+        .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+        .toast { background: #1a1a2e; color: #fff; padding: 0.85rem 1.25rem; border-radius: 10px; font-size: 0.9rem; font-weight: 500; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards; pointer-events: auto; max-width: 360px; }
+        .toast.success { background: #16a34a; }
+        .toast.error   { background: #dc2626; }
+        @keyframes toastIn  { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+
+        @media (max-width: 768px) {
+            .app-header h1 { font-size: 1.2rem; }
+            .card-grid { grid-template-columns: 1fr; }
+            .modal-dialog .form-row { grid-template-columns: 1fr; }
+            .filter-bar .grid { grid-template-columns: 1fr; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar .add-btn { width: 100%; justify-content: center; }
+            .modal-dialog { padding: 1.25rem; margin: 0.5rem; }
+            .pwa-banner { font-size: 0.82rem; padding: 0.85rem 1rem; }
+        }
+        @media (max-width: 480px) {
+            .app-header { padding: 1rem 0; }
+            .app-header h1 { font-size: 1.1rem; }
+            .factory-card { padding: 1rem; }
+            .factory-card .card-image { height: 160px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="container">
+            <h1>惠州厂房出租信息管理</h1>
+            <div class="header-stats" id="headerStats">
+                <span>📋 共 <strong id="totalCount">0</strong> 条信息</span>
+                <span id="filteredBadge" style="display:none;">🔍 筛选结果 <strong id="filteredCount">0</strong> 条</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <aside class="pwa-banner" id="pwaBanner">
+            <div class="pwa-icon">📲</div>
+            <div class="pwa-content">
+                <strong>💡 提示：把本页添加到手机主屏幕，像APP一样方便使用！</strong>
+                <ol class="steps">
+                    <li>1️⃣ 点击浏览器底部/顶部的 <strong>「分享」</strong> 按钮</li>
+                    <li>2️⃣ 找到 <strong>「添加到主屏幕」</strong></li>
+                    <li>3️⃣ 确认添加，以后在主屏点击图标即可一键打开 ✨</li>
+                </ol>
+            </div>
+            <button class="pwa-close" id="btnPwaClose" title="不再提示">✕</button>
+        </aside>
+
+        <section class="filter-bar">
+            <div class="grid">
+                <div><label for="searchKeyword">🔎 关键字搜索</label><input type="search" id="searchKeyword" placeholder="搜索厂房名称或备注…"></div>
+                <div>
+                    <label for="filterLocation">📍 位置筛选</label>
+                    <select id="filterLocation">
+                        <option value="">全部区域</option>
+                        <option value="惠城区">惠城区</option><option value="惠阳区">惠阳区</option>
+                        <option value="博罗县">博罗县</option><option value="惠东县">惠东县</option>
+                        <option value="龙门县">龙门县</option><option value="仲恺高新区">仲恺高新区</option>
+                        <option value="大亚湾区">大亚湾区</option>
+                    </select>
+                </div>
+                <div>
+                    <label>💰 租金区间（元/月）</label>
+                    <div class="rent-range-group">
+                        <input type="number" id="rentMin" placeholder="最低价" min="0" step="100"><span>—</span>
+                        <input type="number" id="rentMax" placeholder="最高价" min="0" step="100">
+                    </div>
+                </div>
+                <div class="filter-actions"><button type="button" id="btnResetFilter" class="outline secondary" style="margin-bottom:0;">🔄 重置</button></div>
+            </div>
+        </section>
+
+        <div class="toolbar"><div></div><button type="button" id="btnAdd" class="add-btn">➕ 添加新厂房</button></div>
+        <section id="cardContainer"></section>
+    </main>
+
+    <div class="image-viewer" id="imageViewer"><img src="" alt="厂房照片" id="viewerImage"></div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-dialog">
+            <h2 id="modalTitle">➕ 添加新厂房</h2>
+            <form id="factoryForm" autocomplete="off">
+                <input type="hidden" id="formId">
+                <div class="form-group"><label for="formName"><span class="required">*</span> 厂房名称</label><input type="text" id="formName" required placeholder="例如：仲恺XX工业园厂房"></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="formArea"><span class="required">*</span> 面积（㎡）</label><input type="number" id="formArea" required placeholder="例如：500" min="1" step="1"></div>
+                    <div class="form-group"><label for="formRent"><span class="required">*</span> 租金（元/月）</label><input type="number" id="formRent" required placeholder="例如：8000" min="0" step="100"></div>
+                </div>
+                <div class="form-group">
+                    <label for="formLocation"><span class="required">*</span> 位置</label>
+                    <select id="formLocation" required>
+                        <option value="">请选择区域</option>
+                        <option value="惠城区">惠城区</option><option value="惠阳区">惠阳区</option>
+                        <option value="博罗县">博罗县</option><option value="惠东县">惠东县</option>
+                        <option value="龙门县">龙门县</option><option value="仲恺高新区">仲恺高新区</option><option value="大亚湾区">大亚湾区</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="formPhone"><span class="required">*</span> 老板联系电话</label><input type="tel" id="formPhone" required placeholder="例如：13888888888"></div>
+                    <div class="form-group"><label for="formWechat">老板微信</label><input type="text" id="formWechat" placeholder="微信号或手机号"></div>
+                </div>
+                <div class="form-group">
+                    <label>📷 厂房照片</label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-hint"><span class="icon">🖼️</span>点击下方按钮选择图片，自动上传到图床</div>
+                        <div class="upload-actions">
+                            <button type="button" id="btnSelectImage" class="outline">📁 选择照片</button>
+                            <span style="font-size:0.82rem;color:#999;">或</span>
+                            <input type="text" id="formImageUrl" placeholder="直接粘贴图片链接…" style="flex:1;min-width:140px;margin-bottom:0;font-size:0.85rem;">
+                        </div>
+                        <div class="upload-status" id="uploadStatus"></div>
+                        <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                    </div>
+                    <div class="image-preview-wrap" id="imagePreviewWrap">
+                        <img src="" alt="预览" id="imagePreview">
+                        <button type="button" class="remove-image" id="btnRemoveImage" title="移除图片">✕</button>
+                    </div>
+                </div>
+                <div class="form-group"><label for="formNotes">备注</label><textarea id="formNotes" rows="3" placeholder="补充信息、厂房特色等…"></textarea></div>
+                <div class="modal-actions">
+                    <button type="button" id="btnCancel" class="outline secondary">取消</button>
+                    <button type="submit" id="btnSubmit">💾 保存信息</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-dialog">
+            <div class="confirm-icon">⚠️</div><h3>确认删除</h3>
+            <p id="confirmText">确定要删除这条厂房信息吗？此操作不可恢复。</p>
+            <div class="confirm-actions">
+                <button type="button" id="btnConfirmCancel" class="outline secondary">取消</button>
+                <button type="button" id="btnConfirmDelete" class="contrast" style="background:#dc2626;border-color:#dc2626;">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ★ 图床 API 配置：去 https://api.imgbb.com/ 免费注册获取 Key，替换下方
+        const IMGBB_API_KEY = 'YOUR_IMGBB_API_KEY';
+        const IMGBB_API_URL = 'https://api.imgbb.com/1/upload';
+        const MAX_IMAGE_MB = 5;
+        const COMPRESS_MAX_WIDTH = 1200;
+        const COMPRESS_QUALITY = 0.75;
+
+        const STORAGE_KEY = 'huizhou_factory_rentals';
+        const PWA_BANNER_KEY = 'pwa_banner_dismissed';
+
+        const $ = (sel) => document.querySelector(sel);
+        const dom = {
+            cardContainer: $('#cardContainer'), modalOverlay: $('#modalOverlay'), modalTitle: $('#modalTitle'),
+            factoryForm: $('#factoryForm'), formId: $('#formId'), formName: $('#formName'),
+            formArea: $('#formArea'), formRent: $('#formRent'), formLocation: $('#formLocation'),
+            formPhone: $('#formPhone'), formWechat: $('#formWechat'), formNotes: $('#formNotes'),
+            btnSubmit: $('#btnSubmit'), btnAdd: $('#btnAdd'), btnCancel: $('#btnCancel'), btnResetFilter: $('#btnResetFilter'),
+            btnSelectImage: $('#btnSelectImage'), fileInput: $('#fileInput'), formImageUrl: $('#formImageUrl'),
+            imageUploadArea: $('#imageUploadArea'), uploadStatus: $('#uploadStatus'),
+            imagePreviewWrap: $('#imagePreviewWrap'), imagePreview: $('#imagePreview'), btnRemoveImage: $('#btnRemoveImage'),
+            imageViewer: $('#imageViewer'), viewerImage: $('#viewerImage'),
+            pwaBanner: $('#pwaBanner'), btnPwaClose: $('#btnPwaClose'),
+            confirmOverlay: $('#confirmOverlay'), confirmText: $('#confirmText'),
+            btnConfirmCancel: $('#btnConfirmCancel'), btnConfirmDelete: $('#btnConfirmDelete'),
+            searchKeyword: $('#searchKeyword'), filterLocation: $('#filterLocation'),
+            rentMin: $('#rentMin'), rentMax: $('#rentMax'),
+            totalCount: $('#totalCount'), filteredCount: $('#filteredCount'), filteredBadge: $('#filteredBadge'),
+            toastContainer: $('#toastContainer'),
+        };
+
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                if (file.size < MAX_IMAGE_MB * 1024 * 1024 * 0.5) {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        let w = img.width, h = img.height;
+                        if (w > COMPRESS_MAX_WIDTH) { h = Math.round(h * COMPRESS_MAX_WIDTH / w); w = COMPRESS_MAX_WIDTH; }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', COMPRESS_QUALITY));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadToImgbb(base64Data) {
+            const base64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
+            const formData = new FormData();
+            formData.append('key', IMGBB_API_KEY);
+            formData.append('image', base64);
+            try {
+                const resp = await fetch(IMGBB_API_URL, { method: 'POST', body: formData });
+                const json = await resp.json();
+                if (json.success && json.data && json.data.url) return { success: true, url: json.data.url };
+                return { success: false, error: (json.error && json.error.message) || '上传失败' };
+            } catch (err) { return { success: false, error: '网络连接失败，imgbb.com 可能不可达' }; }
+        }
+
+        async function handleImageSelect(file) {
+            if (!file || !file.type.startsWith('image/')) { showToast('请选择图片文件', 'error'); return; }
+            dom.uploadStatus.textContent = '⏳ 正在压缩图片…';
+            dom.uploadStatus.className = 'upload-status loading';
+            let base64;
+            try { base64 = await compressImage(file); } catch (e) { dom.uploadStatus.textContent = '❌ 图片读取失败'; dom.uploadStatus.className = 'upload-status error'; return; }
+            if (IMGBB_API_KEY && IMGBB_API_KEY !== 'YOUR_IMGBB_API_KEY') {
+                dom.uploadStatus.textContent = '⏳ 正在上传到图床…';
+                const result = await uploadToImgbb(base64);
+                if (result.success) {
+                    dom.uploadStatus.textContent = '✅ 上传成功！'; dom.uploadStatus.className = 'upload-status success';
+                    dom.formImageUrl.value = result.url; showImagePreview(result.url);
+                    setTimeout(() => { if (dom.uploadStatus.textContent === '✅ 上传成功！') dom.uploadStatus.textContent = ''; }, 3000);
+                    return;
+                } else {
+                    dom.uploadStatus.textContent = '⚠️ 图床上传失败，将使用本地存储'; dom.uploadStatus.className = 'upload-status error';
+                    dom.formImageUrl.value = base64; showImagePreview(base64); return;
+                }
+            } else {
+                dom.uploadStatus.textContent = '💡 未配置图床 API，图片将保存在本地'; dom.uploadStatus.className = 'upload-status success';
+                dom.formImageUrl.value = base64; showImagePreview(base64);
+            }
+        }
+
+        function showImagePreview(src) { dom.imagePreview.src = src; dom.imagePreviewWrap.classList.add('has-image'); }
+        function clearImagePreview() { dom.imagePreview.src = ''; dom.imagePreviewWrap.classList.remove('has-image'); dom.formImageUrl.value = ''; dom.uploadStatus.textContent = ''; dom.uploadStatus.className = 'upload-status'; }
+
+        function loadData() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; } }
+        function saveData(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) { if (e.name === 'QuotaExceededError') showToast('⚠️ 存储空间不足！', 'error'); } }
+        function generateId() { return 'f_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8); }
+        function addRecord(r) { const d = loadData(); r.id = generateId(); r.createdAt = new Date().toISOString(); d.unshift(r); saveData(d); return r; }
+        function updateRecord(id, u) { const d = loadData(); const i = d.findIndex(r => r.id === id); if (i === -1) return false; d[i] = { ...d[i], ...u, id }; saveData(d); return true; }
+        function deleteRecord(id) { const d = loadData(); const f = d.filter(r => r.id !== id); if (f.length === d.length) return false; saveData(f); return true; }
+        function getRecord(id) { return loadData().find(r => r.id === id); }
+
+        function getFilteredData() {
+            let d = loadData();
+            const kw = dom.searchKeyword.value.trim().toLowerCase();
+            const loc = dom.filterLocation.value;
+            const rMin = parseFloat(dom.rentMin.value), rMax = parseFloat(dom.rentMax.value);
+            if (kw) d = d.filter(r => r.name.toLowerCase().includes(kw) || (r.notes && r.notes.toLowerCase().includes(kw)));
+            if (loc) d = d.filter(r => r.location === loc);
+            if (!isNaN(rMin)) d = d.filter(r => parseFloat(r.rent) >= rMin);
+            if (!isNaN(rMax)) d = d.filter(r => parseFloat(r.rent) <= rMax);
+            return d;
+        }
+
+        function renderCards() {
+            const all = loadData(), filtered = getFilteredData();
+            dom.totalCount.textContent = all.length;
+            if (dom.searchKeyword.value.trim() || dom.filterLocation.value || dom.rentMin.value || dom.rentMax.value) {
+                dom.filteredBadge.style.display = ''; dom.filteredCount.textContent = filtered.length;
+            } else { dom.filteredBadge.style.display = 'none'; }
+            if (filtered.length === 0) {
+                dom.cardContainer.innerHTML = all.length === 0
+                    ? '<div class="empty-state"><div class="empty-icon">📭</div><h3>还没有添加任何厂房信息</h3><p>点击上方「➕ 添加新厂房」按钮开始使用吧</p></div>'
+                    : '<div class="empty-state"><div class="empty-icon">🔍</div><h3>没有匹配的筛选结果</h3><p>请尝试调整筛选条件或清空搜索关键字</p></div>';
+                return;
+            }
+            dom.cardContainer.innerHTML = filtered.map(r => {
+                const img = r.image ? `<img class="card-image" src="${escAttr(r.image)}" alt="${escAttr(r.name)}" loading="lazy" data-full-src="${escAttr(r.image)}">` : '';
+                return `<article class="factory-card" data-id="${r.id}">${img}<h3 class="card-title">${escHtml(r.name)}</h3>
+                <div class="card-meta"><span class="tag">📍 ${escHtml(r.location)}</span><span>📐 ${escHtml(String(r.area))} ㎡</span><span>💰 ${fmtRent(r.rent)} 元/月</span></div>
+                <div class="card-contact"><span>📞 <a href="tel:${escAttr(r.phone)}">${escHtml(r.phone)}</a></span>${r.wechat ? '<span>💬 微信：'+escHtml(r.wechat)+'</span>' : ''}</div>
+                ${r.notes ? '<div class="card-notes">📝 '+escHtml(r.notes)+'</div>' : ''}
+                <div class="card-actions"><button class="btn-edit outline" data-id="'+r.id+'">✏️ 编辑</button><button class="btn-delete outline secondary" data-id="'+r.id+'">🗑️ 删除</button></div></article>`;
+            }).join('');
+            dom.cardContainer.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.id)));
+            dom.cardContainer.querySelectorAll('.btn-delete').forEach(b => b.addEventListener('click', () => openDeleteConfirm(b.dataset.id)));
+            dom.cardContainer.querySelectorAll('.card-image').forEach(i => i.addEventListener('click', () => { dom.viewerImage.src = i.dataset.fullSrc; dom.imageViewer.classList.add('active'); document.body.style.overflow = 'hidden'; }));
+        }
+
+        function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function escAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function fmtRent(r) { const n = parseInt(r,10); if (isNaN(n)) return r; if (n>=10000) return (n/10000).toFixed(n%10000===0?0:1)+' 万'; return n.toLocaleString('zh-CN'); }
+
+        function openModal(t, st) { dom.modalTitle.textContent = t; dom.btnSubmit.textContent = st; dom.modalOverlay.classList.add('active'); document.body.style.overflow = 'hidden'; setTimeout(() => dom.formName.focus(), 150); }
+        function closeModal() { dom.modalOverlay.classList.remove('active'); document.body.style.overflow = ''; resetForm(); }
+        function resetForm() { dom.factoryForm.reset(); dom.formId.value = ''; clearImagePreview(); dom.factoryForm.querySelectorAll('input,select,textarea').forEach(e => e.setCustomValidity('')); }
+        function openAddModal() { resetForm(); openModal('➕ 添加新厂房', '💾 保存信息'); }
+        function openEditModal(id) {
+            const r = getRecord(id); if (!r) { showToast('未找到该记录', 'error'); return; }
+            resetForm(); dom.formId.value = r.id; dom.formName.value = r.name || ''; dom.formArea.value = r.area || '';
+            dom.formRent.value = r.rent || ''; dom.formLocation.value = r.location || ''; dom.formPhone.value = r.phone || '';
+            dom.formWechat.value = r.wechat || ''; dom.formNotes.value = r.notes || '';
+            if (r.image) { dom.formImageUrl.value = r.image; showImagePreview(r.image); }
+            openModal('✏️ 编辑厂房信息', '💾 更新信息');
+        }
+
+        let pendingDeleteId = null;
+        function openDeleteConfirm(id) { const r = getRecord(id); if (!r) return; pendingDeleteId = id; dom.confirmText.textContent = '确定要删除「' + r.name + '」吗？此操作不可恢复。'; dom.confirmOverlay.classList.add('active'); }
+        function closeDeleteConfirm() { dom.confirmOverlay.classList.remove('active'); pendingDeleteId = null; }
+        function executeDelete() { if (!pendingDeleteId) return; const r = getRecord(pendingDeleteId); const n = r?r.name:'未知'; if (deleteRecord(pendingDeleteId)) { showToast('已删除「'+n+'」', 'success'); renderCards(); } else showToast('删除失败', 'error'); closeDeleteConfirm(); }
+
+        function showToast(msg, type) {
+            const t = document.createElement('div'); t.className = 'toast '+(type||''); t.textContent = msg;
+            dom.toastContainer.appendChild(t);
+            t.addEventListener('animationend', e => { if (e.animationName==='toastOut') t.remove(); });
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 3500);
+        }
+
+        dom.factoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!dom.factoryForm.checkValidity()) { dom.factoryForm.reportValidity(); return; }
+            const fd = { name: dom.formName.value.trim(), area: dom.formArea.value.trim(), rent: dom.formRent.value.trim(), location: dom.formLocation.value, phone: dom.formPhone.value.trim(), wechat: dom.formWechat.value.trim(), notes: dom.formNotes.value.trim(), image: dom.formImageUrl.value.trim() };
+            const eid = dom.formId.value.trim();
+            if (eid) { if (updateRecord(eid, fd)) { showToast('✅ 信息更新成功！', 'success'); closeModal(); renderCards(); } else showToast('更新失败', 'error'); }
+            else { addRecord(fd); showToast('✅ 厂房信息添加成功！', 'success'); closeModal(); renderCards(); }
+        });
+
+        dom.btnSelectImage.addEventListener('click', () => dom.fileInput.click());
+        dom.fileInput.addEventListener('change', () => { const f = dom.fileInput.files[0]; if (f) handleImageSelect(f); dom.fileInput.value = ''; });
+        dom.imageUploadArea.addEventListener('dragover', e => { e.preventDefault(); dom.imageUploadArea.classList.add('drag-over'); });
+        dom.imageUploadArea.addEventListener('dragleave', () => dom.imageUploadArea.classList.remove('drag-over'));
+        dom.imageUploadArea.addEventListener('drop', e => { e.preventDefault(); dom.imageUploadArea.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) handleImageSelect(f); });
+        dom.formImageUrl.addEventListener('input', () => { const u = dom.formImageUrl.value.trim(); if (u&&(u.startsWith('http')||u.startsWith('data:image/'))) showImagePreview(u); else clearImagePreview(); });
+        document.addEventListener('paste', function(e) { if (!dom.modalOverlay.classList.contains('active')) return; const ae = document.activeElement; if (ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')&&ae!==dom.formImageUrl) return; const items = e.clipboardData&&e.clipboardData.items; if (!items) return; for (const item of items) { if (item.type.startsWith('image/')) { e.preventDefault(); handleImageSelect(item.getAsFile()); return; } } });
+        dom.btnRemoveImage.addEventListener('click', clearImagePreview);
+        dom.imageViewer.addEventListener('click', () => { dom.imageViewer.classList.remove('active'); document.body.style.overflow = ''; });
+
+        if (!(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone || localStorage.getItem(PWA_BANNER_KEY)) { dom.pwaBanner.style.display = 'none'; }
+        dom.btnPwaClose.addEventListener('click', () => { dom.pwaBanner.style.display = 'none'; try { localStorage.setItem(PWA_BANNER_KEY, Date.now()+30*24*60*60*1000); } catch(e) {} });
+
+        let ft = null;
+        function onFilterChange() { renderCards(); }
+        dom.searchKeyword.addEventListener('input', () => { clearTimeout(ft); ft = setTimeout(onFilterChange, 300); });
+        dom.filterLocation.addEventListener('change', onFilterChange);
+        dom.rentMin.addEventListener('input', () => { clearTimeout(ft); ft = setTimeout(onFilterChange, 500); });
+        dom.rentMax.addEventListener('input', () => { clearTimeout(ft); ft = setTimeout(onFilterChange, 500); });
+        dom.btnResetFilter.addEventListener('click', () => { dom.searchKeyword.value=''; dom.filterLocation.value=''; dom.rentMin.value=''; dom.rentMax.value=''; renderCards(); });
+
+        dom.btnAdd.addEventListener('click', openAddModal);
+        dom.btnCancel.addEventListener('click', closeModal);
+        dom.modalOverlay.addEventListener('click', e => { if (e.target===dom.modalOverlay) closeModal(); });
+        dom.btnConfirmCancel.addEventListener('click', closeDeleteConfirm);
+        dom.btnConfirmDelete.addEventListener('click', executeDelete);
+        dom.confirmOverlay.addEventListener('click', e => { if (e.target===dom.confirmOverlay) closeDeleteConfirm(); });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') { if (dom.imageViewer.classList.contains('active')) { dom.imageViewer.classList.remove('active'); document.body.style.overflow = ''; } else if (dom.confirmOverlay.classList.contains('active')) closeDeleteConfirm(); else if (dom.modalOverlay.classList.contains('active')) closeModal(); }
+            if ((e.ctrlKey||e.metaKey) && e.key==='Enter' && dom.modalOverlay.classList.contains('active')) dom.factoryForm.dispatchEvent(new Event('submit'));
+        });
+
+        function init() {
+            try {
+                const m = { name:'惠州厂房出租信息管理', short_name:'厂房管理', start_url: window.location.href, display:'standalone', background_color:'#f5f6fa', theme_color:'#1a56db', icons:[{src:"data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="38" fill="#1a56db"/><text x="96" y="128" font-size="105" text-anchor="middle" fill="white">🏭</text></svg>'), sizes:'192x192',type:'image/svg+xml',purpose:'any maskable'}] };
+                const b = new Blob([JSON.stringify(m)],{type:'application/json'});
+                const l = document.createElement('link'); l.rel='manifest'; l.href=URL.createObjectURL(b); document.head.appendChild(l);
+            } catch(e) {}
+            if (loadData().length === 0) {
+                saveData([
+                    { name:'仲恺高新区XX电子产业园3栋', area:'1200', rent:'15000', location:'仲恺高新区', phone:'13927384561', wechat:'wx13927384561', notes:'一楼，层高6米，有货梯，适合电子加工、仓储。近高速口，交通便利。', image:'', id:'demo_0', createdAt:new Date(Date.now()-2*86400000).toISOString() },
+                    { name:'惠阳区淡水XX工业厂房A区', area:'800', rent:'9600', location:'惠阳区', phone:'13798765432', wechat:'', notes:'标准厂房，水电齐全，配独立变压器。园区有食堂、宿舍配套。', image:'', id:'demo_1', createdAt:new Date(Date.now()-86400000).toISOString() },
+                    { name:'惠东县白花镇XX厂房整栋', area:'3000', rent:'25000', location:'惠东县', phone:'13512345678', wechat:'boss_wang88', notes:'整栋4层，每层750㎡，带货梯，门口可停大货车。可分租。', image:'', id:'demo_2', createdAt:new Date().toISOString() },
+                ]);
+            }
+            renderCards();
+            console.log('✅ 惠州厂房出租信息管理系统 v2 已就绪');
+        }
+        init();
+    })();
+    </script>
+</body>
+</html>

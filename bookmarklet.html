@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>考证错题助手 — 导入工具</title>
+<style>
+:root{--bg:#f8fafc;--card:#fff;--text:#1e293b;--sub:#64748b;--primary:#4f46e5;--success:#10b981;--radius:12px;--shadow:0 4px 16px rgba(0,0,0,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);max-width:600px;width:100%;padding:2rem;text-align:center}
+h1{font-size:1.4rem;margin-bottom:0.5rem}
+h1 span{color:var(--primary)}
+.sub{color:var(--sub);margin-bottom:1.5rem;font-size:0.9rem}
+.steps{text-align:left;background:#f1f5f9;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:0.88rem;line-height:2}
+.steps .num{display:inline-block;width:22px;height:22px;background:var(--primary);color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:0.75rem;margin-right:0.4rem}
+.bookmarklet-wrap{margin:1.5rem 0}
+.bookmarklet-link{display:inline-block;padding:0.8rem 2rem;background:var(--primary);color:#fff;text-decoration:none;border-radius:30px;font-weight:700;font-size:1.1rem;cursor:grab;transition:all .2s;user-select:none}
+.bookmarklet-link:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(79,70,229,0.3)}
+.bookmarklet-link:active{cursor:grabbing}
+.drag-hint{color:var(--sub);font-size:0.78rem;margin-top:0.5rem}
+.paste-section{margin-top:1.5rem;border-top:1px solid #e2e8f0;padding-top:1.5rem}
+.paste-section textarea{width:100%;height:200px;border:2px solid #e2e8f0;border-radius:8px;padding:0.75rem;font-size:0.85rem;resize:vertical;font-family:inherit;outline:none;transition:border-color .2s}
+.paste-section textarea:focus{border-color:var(--primary)}
+.btn-row{display:flex;gap:0.5rem;margin-top:0.75rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:0.6rem 1.5rem;border-radius:8px;border:none;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{opacity:0.9}
+.btn-outline{background:#fff;color:var(--primary);border:2px solid var(--primary)}
+.result-box{margin-top:1rem;max-height:300px;overflow:auto;background:#f8fafc;border-radius:8px;padding:0.75rem;font-size:0.8rem;text-align:left;white-space:pre-wrap;display:none}
+.result-box.show{display:block}
+.result-count{color:var(--success);font-weight:600;margin-top:0.5rem;display:none}
+.result-count.show{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+    <h1>📝 <span>考证错题助手</span> — 一键导入工具</h1>
+    <p class="sub">两种方式把考试题目导入题库，任选一种</p>
+
+    <!-- 方式1：书签 -->
+    <h3 style="margin-bottom:0.75rem">方式一：📌 书签导入（最推荐）</h3>
+    <div class="steps">
+        <div><span class="num">1</span> 把下面这个蓝色按钮 <strong>拖到浏览器的收藏栏</strong></div>
+        <div><span class="num">2</span> 打开任何考试页面（橙点同学、驾考宝典等）</div>
+        <div><span class="num">3</span> 点一下收藏栏里的 <strong>「📝 导入错题助手」</strong></div>
+        <div><span class="num">4</span> 题目自动复制到剪贴板 → 回到错题助手 → Ctrl+V 粘贴</div>
+    </div>
+    <div class="bookmarklet-wrap">
+        <a class="bookmarklet-link" href="javascript:(function(){const%20qs=[];function%20parse(t){const%20lines=t.split('\n').map(l=>l.trim()).filter(Boolean);let%20q='',a='',e='',opts=[];for(const%20l%20of%20lines){const%20om=l.match(/^([A-J])[.%E3%80%81%EF%BC%8E)%20%09]\s*(.+)/);const%20am=l.match(/(%E6%AD%A3%E7%A1%AE%E7%AD%94%E6%A1%88|%E7%AD%94%E6%A1%88|%E5%8F%82%E8%80%83%E7%AD%94%E6%A1%88)[%EF%BC%9A:]\s*(.+)/i);const%20em=l.match(/(%E8%A7%A3%E6%9E%90|%E8%A7%A3%E9%87%8A|%E8%AF%B4%E6%98%8E)[%EF%BC%9A:]\s*(.+)/i);if(am)a=am[2].trim();else%20if(em)e=em[2].trim();else%20if(om)opts.push(om[2].trim());else%20if(!q&&l.length>3)q=l.replace(/^\d+[.%E3%80%81%EF%BC%8E)%20%09]\s*/,'').trim()}if(q&&q.length>3){let%20t='single';const%20u=a.toUpperCase();if(['%E5%AF%B9','%E6%AD%A3%E7%A1%AE','%E2%9C%93','%E2%88%9A','TRUE','T'].includes(u)){t='judge';a='%E2%9C%93'}else%20if(['%E9%94%99','%E9%94%99%E8%AF%AF','%E2%9C%97','%C3%97','FALSE','F'].includes(u)){t='judge';a='%E2%9C%97'}else%20if(u.length>1&&/^[A-J]+$/i.test(u))t='multiple';qs.push({question:q,type:t,options:opts,correctAnswer:a,explanation:e})}}const%20body=document.body.innerText;const%20blocks=body.split(/\n(?=\d+[.%E3%80%81%EF%BC%8E)%20%09])/g);if(blocks.length>2){blocks.forEach(parse)}else{const%20el=document.querySelectorAll('.question-item,.exam-question,[class*=question],[class*=topic],.subject-item');if(el.length>2)el.forEach(e=>{parse(e.innerText||e.textContent||'')});else%20parse(body)}const%20out=qs.map((q,i)=>(i+1)+'.%20'+q.question+'\n'+q.options.map((o,j)=>'ABCDEFGHIJ'[j]+'.%20'+o).join('\n')+'\n%E6%AD%A3%E7%A1%AE%E7%AD%94%E6%A1%88%EF%BC%9A'+q.correctAnswer+(q.explanation?'\n%E8%A7%A3%E6%9E%90%EF%BC%9A'+q.explanation:'')).join('\n\n');navigator.clipboard.writeText(out).then(()=>{alert('%E2%9C%85%20%E5%B7%B2%E6%8F%90%E5%8F%96%20'+qs.length+'%20%E9%81%93%E9%A2%98%E7%9B%AE%E5%88%B0%E5%89%AA%E8%B4%B4%E6%9D%BF%EF%BC%81%0A%0A%E5%9B%9E%E5%88%B0%E9%94%99%E9%A2%98%E5%8A%A9%E6%89%8B%20%E2%86%92%20%E7%B2%98%E8%B4%B4%E5%86%85%E5%AE%B9%20%E2%86%92%20%E8%87%AA%E5%8A%A8%E8%A7%A3%E6%9E%90')}).catch(()=>{prompt('%E5%A4%8D%E5%88%B6%E4%BB%A5%E4%B8%8B%E5%86%85%E5%AE%B9%EF%BC%8C%E7%B2%98%E8%B4%B4%E5%88%B0%E9%94%99%E9%A2%98%E5%8A%A9%E6%89%8B',out)})})();">📝 导入错题助手</a>
+    </div>
+    <p class="drag-hint">👆 按住上面按钮，拖到浏览器收藏栏（如果看不到收藏栏，按 Ctrl+Shift+B 显示）</p>
+
+    <!-- 方式2：手动粘贴 -->
+    <div class="paste-section">
+        <h3 style="margin-bottom:0.5rem">方式二：📋 直接粘贴（万能）</h3>
+        <p style="color:var(--sub);font-size:0.82rem;margin-bottom:0.75rem">考试页面上 Ctrl+A → Ctrl+C → 在下面 Ctrl+V 粘贴 → 点解析</p>
+        <textarea id="pasteInput" placeholder="在这里粘贴考试页面的全部内容…"></textarea>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btnParse">🔍 智能解析</button>
+            <button class="btn btn-outline" id="btnCopy">📋 复制解析结果</button>
+            <button class="btn btn-outline" id="btnClear">🗑️ 清空</button>
+        </div>
+        <div class="result-count" id="resultCount"></div>
+        <div class="result-box" id="resultBox"></div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const $=s=>document.querySelector(s);
+    const pasteInput=$('#pasteInput');
+    const resultBox=$('#resultBox');
+    const resultCount=$('#resultCount');
+    let lastResult='';
+
+    function parseAll(raw){
+        const questions=[];
+        const body=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+
+        // 策略1：按题号分块
+        const blocks=body.split(/\n(?=\d{1,3}[.、．)\s]{1,3}[^\n]{3,})/g);
+        const allBlocks=blocks.length>1?blocks:[body];
+
+        allBlocks.forEach(block=>{
+            const q=parseOne(block);
+            if(q&&q.question&&q.question.length>3)questions.push(q);
+        });
+
+        // 策略2：如果分块失败，尝试从DOM风格文本中提取
+        if(questions.length===0){
+            const lines=body.split('\n').filter(l=>l.trim());
+            let current=null,opts=[];
+            for(const line of lines){
+                const om=line.match(/^([A-J])[.、．)\s]+(.+)/);
+                const am=line.match(/(?:正确答案|答案|参考答案)[：:]\s*(.+)/i);
+                const em=line.match(/(?:解析|解释|说明)[：:]\s*(.+)/i);
+                const qm=line.match(/^(\d{1,3})[.、．)\s]+(.{3,})/);
+
+                if(am&&current){current.correctAnswer=am[1].trim();if(current.correctAnswer.length>1&&/^[A-J]+$/i.test(current.correctAnswer))current.type='multiple'}
+                else if(em&&current)current.explanation=em[1].trim();
+                else if(om){opts.push(om[2].trim());if(current)current.options=opts}
+                else if(qm){
+                    if(current&&current.question){current.options=opts;questions.push(current);opts=[]}
+                    current={question:qm[2].trim(),type:'single',correctAnswer:'',options:[],explanation:''};
+                }else if(current&&!current.question&&line.length>3)current.question=line;
+            }
+            if(current&&current.question){current.options=opts;questions.push(current)}
+        }
+
+        // 判断题识别
+        questions.forEach(q=>{
+            const u=q.correctAnswer.toUpperCase();
+            if(['对','正确','✓','√','TRUE','T','YES'].includes(u)){q.type='judge';q.correctAnswer='✓'}
+            else if(['错','错误','✗','×','FALSE','F','NO'].includes(u)){q.type='judge';q.correctAnswer='✗'}
+            else if(u.length>1&&/^[A-J]+$/i.test(u))q.type='multiple';
+        });
+
+        return questions;
+    }
+
+    function parseOne(block){
+        const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
+        if(lines.length===0)return null;
+        let q='',a='',e='';const opts=[];
+        for(const l of lines){
+            const om=l.match(/^([A-J])[.、．)\s]+(.+)/);
+            const am=l.match(/(?:正确答案|答案|参考答案)[：:]\s*(.+)/i);
+            const em=l.match(/(?:解析|解释|说明)[：:]\s*(.+)/i);
+            if(am)a=am[1].trim();
+            else if(em)e=em[1].trim();
+            else if(om)opts.push(om[2].trim());
+            else if(!q&&l.length>3)q=l.replace(/^\d+[.、．)\s]+/,'').trim();
+        }
+        if(!q||q.length<3)return null;
+        let type='single';
+        const u=a.toUpperCase();
+        if(['对','正确','✓','√','TRUE','T'].includes(u)){type='judge';a='✓'}
+        else if(['错','错误','✗','×','FALSE','F'].includes(u)){type='judge';a='✗'}
+        else if(u.length>1&&/^[A-J]+$/i.test(u))type='multiple';
+        return{question:q,type,options:opts,correctAnswer:a,explanation:e};
+    }
+
+    $('#btnParse').addEventListener('click',()=>{
+        const raw=pasteInput.value.trim();
+        if(!raw){alert('请先粘贴内容');return}
+        const qs=parseAll(raw);
+        if(qs.length===0){alert('未识别到题目，请确认内容包含题目和答案');return}
+        lastResult=qs.map((q,i)=>(i+1)+'. '+q.question+'\n'+q.options.map((o,j)=>'ABCDEFGHIJ'[j]+'. '+o).join('\n')+'\n正确答案：'+q.correctAnswer+(q.explanation?'\n解析：'+q.explanation:'')).join('\n\n');
+        resultBox.textContent=lastResult;
+        resultBox.classList.add('show');
+        resultCount.textContent='✅ 解析出 '+qs.length+' 道题目';
+        resultCount.classList.add('show');
+    });
+
+    $('#btnCopy').addEventListener('click',()=>{
+        if(!lastResult){alert('请先解析');return}
+        navigator.clipboard.writeText(lastResult).then(()=>{
+            alert('已复制！回到错题助手，打开"粘贴内容导入"，Ctrl+V 粘贴后点"自动解析"即可');
+        }).catch(()=>{
+            pasteInput.value=lastResult;
+            pasteInput.select();
+            alert('请手动 Ctrl+C 复制文本框内容');
+        });
+    });
+
+    $('#btnClear').addEventListener('click',()=>{
+        pasteInput.value='';
+        resultBox.textContent='';
+        resultBox.classList.remove('show');
+        resultCount.textContent='';
+        resultCount.classList.remove('show');
+        lastResult='';
+    });
+
+    // 支持拖拽文件
+    pasteInput.addEventListener('dragover',e=>{e.preventDefault()});
+    pasteInput.addEventListener('drop',e=>{
+        e.preventDefault();
+        const f=e.dataTransfer.files[0];
+        if(!f)return;
+        const r=new FileReader();
+        r.onload=ev=>{pasteInput.value=ev.target.result;$('#btnParse').click()};
+        r.readAsText(f);
+    });
+})();
+</script>
+</body>
+</html>

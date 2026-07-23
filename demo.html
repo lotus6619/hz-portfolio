@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国茶全球表达工具包 — Chinese Tea Universal Translator</title>
+<style>
+/* ============================================================
+   CSS Custom Properties — 配色体系
+   ============================================================ */
+:root {
+  --tea-brown:       #8B6914;
+  --tea-brown-light: #A6842B;
+  --tea-brown-dark:  #6B4F0E;
+  --bamboo-green:    #7BA05B;
+  --bamboo-light:    #9DBF7B;
+  --bamboo-dark:     #5A7D3E;
+  --paper-white:     #F5F0E8;
+  --paper-cream:     #EDE5D6;
+  --ink-black:       #2C2C2C;
+  --ink-gray:        #5A5A5A;
+  --ink-light:       #8A8A8A;
+  --amber-tea:       #D4A76A;
+  --amber-light:     #E8C88A;
+  --porcelain:       #FEFEFA;
+  --cinnabar:        #C04040;
+  --cinnabar-light:  #D46060;
+  --gold-accent:     #C9A84C;
+  --mist:            rgba(245,240,232,0.7);
+  --shadow-sm:       0 2px 8px rgba(44,44,44,0.08);
+  --shadow-md:       0 4px 20px rgba(44,44,44,0.12);
+  --shadow-lg:       0 8px 40px rgba(44,44,44,0.16);
+  --radius-sm:       8px;
+  --radius-md:       16px;
+  --radius-lg:       24px;
+  --font-song:       'Noto Serif SC', 'STSong', 'SimSun', 'Songti SC', serif;
+  --font-hei:        'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  --font-en:         'Playfair Display', 'Georgia', 'Times New Roman', serif;
+  --font-ui:         'Inter', 'SF Pro Display', -apple-system, sans-serif;
+  --transition:      0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-hei);
+  background: var(--paper-white);
+  color: var(--ink-black);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   Decorative Background Elements — 竹 / 山 / 雾 / 茶
+   ============================================================ */
+.bg-layer {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+
+/* 远山 */
+.mountain {
+  position: absolute; bottom: 0;
+  width: 100%; height: 35vh;
+  background:
+    /* 远山轮廓 */
+    linear-gradient(178deg, transparent 40%, rgba(123,160,91,0.06) 41%, rgba(123,160,91,0.06) 42%, transparent 43%),
+    linear-gradient(176deg, transparent 55%, rgba(123,160,91,0.10) 56%, rgba(123,160,91,0.10) 57%, transparent 58%),
+    linear-gradient(177deg, transparent 65%, rgba(123,160,91,0.08) 66%, rgba(123,160,91,0.08) 67%, transparent 68%),
+    /* 更远的淡山 */
+    linear-gradient(175deg, transparent 70%, rgba(123,160,91,0.04) 71%, rgba(123,160,91,0.04) 72%, transparent 73%);
+}
+
+/* 云雾 */
+.mist {
+  position: absolute; bottom: 20vh;
+  width: 120%; height: 12vh; left: -10%;
+  background: radial-gradient(ellipse at 30% 50%, rgba(245,240,232,0.9) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 40%, rgba(245,240,232,0.7) 0%, transparent 55%);
+  animation: mistDrift 20s ease-in-out infinite;
+}
+@keyframes mistDrift {
+  0%, 100% { transform: translateX(0); }
+  33%  { transform: translateX(3%); }
+  66%  { transform: translateX(-2%); }
+}
+
+/* 竹子装饰 — 左侧 */
+.bamboo-left, .bamboo-right {
+  position: absolute; bottom: 0;
+  width: 60px; height: 70vh;
+  opacity: 0.12;
+  background: linear-gradient(to top,
+    var(--bamboo-green) 0%, transparent 5%,
+    var(--bamboo-green) 8%, transparent 13%,
+    var(--bamboo-green) 18%, transparent 22%,
+    var(--bamboo-green) 30%, transparent 33%,
+    var(--bamboo-green) 42%, transparent 46%,
+    var(--bamboo-green) 55%, transparent 58%,
+    var(--bamboo-green) 68%, transparent 71%,
+    var(--bamboo-green) 82%, transparent 85%,
+    var(--bamboo-green) 92%, transparent
+  );
+}
+.bamboo-left  { left: 2vw; }
+.bamboo-right { right: 2vw; }
+
+/* 竹叶点缀 — 用伪元素模拟叶片 */
+.bamboo-left::after, .bamboo-right::after {
+  content: '';
+  position: absolute; top: 10%;
+  width: 30px; height: 8px;
+  background: var(--bamboo-green);
+  border-radius: 0 80% 0 80%;
+  transform: rotate(-30deg);
+  opacity: 0.7;
+}
+.bamboo-left::before, .bamboo-right::before {
+  content: '';
+  position: absolute; top: 22%;
+  width: 24px; height: 7px;
+  background: var(--bamboo-green);
+  border-radius: 80% 0 80% 0;
+  transform: rotate(25deg);
+  opacity: 0.6;
+}
+.bamboo-right::after  { top: 35%; transform: rotate(35deg); }
+.bamboo-right::before { top: 48%; transform: rotate(-20deg); width: 28px; }
+
+/* 飘落茶叶 */
+.tea-leaf {
+  position: absolute;
+  width: 16px; height: 8px;
+  background: var(--bamboo-green);
+  border-radius: 0 80% 0 80%;
+  opacity: 0.08;
+  animation: leafFloat 14s ease-in-out infinite;
+}
+.tea-leaf:nth-child(1) { left: 15%; top: 30%; animation-delay: 0s; }
+.tea-leaf:nth-child(2) { left: 65%; top: 45%; animation-delay: 3s; width: 12px; }
+.tea-leaf:nth-child(3) { left: 80%; top: 25%; animation-delay: 7s; width: 14px; }
+.tea-leaf:nth-child(4) { left: 30%; top: 55%; animation-delay: 10s; width: 18px; }
+@keyframes leafFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.06; }
+  50%      { transform: translateY(-40px) rotate(15deg); opacity: 0.12; }
+}
+
+/* ============================================================
+   Main App Shell
+   ============================================================ */
+.app-container {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto;
+  min-height: 100vh;
+  background: rgba(254,254,250,0.85);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================================
+   Top Bar
+   ============================================================ */
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(139,105,20,0.12);
+  background: rgba(254,254,250,0.9);
+  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 10;
+}
+.top-bar .bamboo-icon {
+  font-size: 1.4rem; color: var(--bamboo-green);
+}
+.top-bar .page-title {
+  font-family: var(--font-song);
+  font-size: 1rem; font-weight: 600;
+  color: var(--ink-black);
+  letter-spacing: 0.05em;
+}
+.top-bar .lang-switch {
+  font-size: 0.78rem; font-family: var(--font-ui);
+  color: var(--ink-light); cursor: pointer;
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid rgba(139,105,20,0.2);
+  background: transparent;
+  transition: var(--transition);
+}
+.top-bar .lang-switch:hover {
+  color: var(--tea-brown); border-color: var(--tea-brown);
+}
+
+/* ============================================================
+   Page Sections — 页面切换逻辑
+   ============================================================ */
+.page {
+  display: none; padding: 24px 20px 40px;
+  animation: pageIn 0.4s ease-out;
+}
+.page.active { display: block; }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   导航页 — Splash / Home
+   ============================================================ */
+.splash-hero {
+  text-align: center; padding: 40px 0 20px;
+  position: relative;
+}
+
+/* 印章 Logo */
+.seal-mark {
+  display: inline-block;
+  width: 90px; height: 90px;
+  border: 3px solid var(--cinnabar);
+  border-radius: 12px;
+  color: var(--cinnabar);
+  font-family: var(--font-song);
+  font-size: 1.5rem; font-weight: 700;
+  line-height: 1.2;
+  padding: 14px 10px;
+  letter-spacing: 0.12em;
+  transform: rotate(-3deg);
+  position: relative;
+}
+.seal-mark::after {
+  content: '';
+  position: absolute; inset: 6px;
+  border: 1px solid rgba(192,64,64,0.3);
+  border-radius: 8px;
+}
+
+.splash-hero h1 {
+  font-family: var(--font-song);
+  font-size: 2rem; font-weight: 700;
+  color: var(--ink-black);
+  margin-top: 20px;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+.splash-hero .subtitle {
+  font-family: var(--font-en);
+  font-size: 0.9rem; color: var(--ink-light);
+  font-style: italic; margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* 水墨装饰线 */
+.ink-line {
+  width: 60px; height: 2px;
+  margin: 16px auto;
+  background: linear-gradient(to right, transparent, var(--amber-tea), transparent);
+  border-radius: 1px;
+}
+
+/* 核心入口卡片 */
+.hero-cards {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 10px 0;
+}
+.hero-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.10);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(139,105,20,0.25);
+}
+.hero-card.primary {
+  border: 2px solid var(--tea-brown);
+  background: linear-gradient(135deg, rgba(139,105,20,0.04), rgba(212,167,106,0.08));
+}
+.hero-card .card-icon {
+  font-size: 2rem; width: 50px; text-align: center; flex-shrink: 0;
+}
+.hero-card .card-body h3 {
+  font-family: var(--font-song); font-size: 1.05rem;
+  color: var(--ink-black); letter-spacing: 0.03em;
+}
+.hero-card .card-body p {
+  font-size: 0.78rem; color: var(--ink-light);
+  margin-top: 2px;
+}
+.hero-card .card-arrow {
+  color: var(--tea-brown); font-size: 1.2rem; margin-left: auto;
+}
+
+/* 次级入口网格 */
+.secondary-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 8px;
+}
+.mini-card {
+  text-align: center; padding: 20px 12px;
+  border-radius: var(--radius-md);
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.08);
+  cursor: pointer; transition: var(--transition);
+}
+.mini-card:hover { border-color: rgba(139,105,20,0.2); box-shadow: var(--shadow-sm); }
+.mini-card .mi-icon { font-size: 1.8rem; }
+.mini-card .mi-label {
+  font-size: 0.82rem; font-family: var(--font-song);
+  color: var(--ink-gray); margin-top: 6px;
+}
+
+.footer-brand {
+  text-align: center; margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid rgba(139,105,20,0.08);
+  font-size: 0.72rem; color: var(--ink-light);
+}
+.footer-brand span { color: var(--tea-brown); font-weight: 500; }
+
+/* ============================================================
+   拍照识茶页 — Identify
+   ============================================================ */
+.camera-frame {
+  position: relative; width: 100%; aspect-ratio: 1;
+  background: linear-gradient(135deg, #F0EBE0, #E8E0D2);
+  border-radius: var(--radius-lg);
+  border: 2px dashed rgba(139,105,20,0.25);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.camera-frame::before {
+  content: '';
+  position: absolute; inset: 3px;
+  border: 1px solid rgba(139,105,20,0.08);
+  border-radius: calc(var(--radius-lg) - 3px);
+}
+.camera-crosshair {
+  position: absolute; top: 50%; left: 50%;
+  width: 70%; height: 70%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(139,105,20,0.15);
+  border-radius: 12px;
+}
+.camera-crosshair::before, .camera-crosshair::after {
+  content: ''; position: absolute;
+  background: rgba(139,105,20,0.2);
+}
+.camera-crosshair::before {
+  top: 0; left: 50%; width: 1px; height: 100%;
+  transform: translateX(-50%);
+}
+.camera-crosshair::after {
+  left: 0; top: 50%; height: 1px; width: 100%;
+  transform: translateY(-50%);
+}
+.camera-hint {
+  position: relative; z-index: 1;
+  text-align: center; color: var(--ink-light);
+  font-size: 0.85rem;
+}
+.camera-hint .cam-icon { font-size: 3rem; display: block; margin-bottom: 8px; }
+
+.upload-row {
+  display: flex; gap: 12px; margin-top: 16px;
+}
+.btn {
+  flex: 1; padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-hei); font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; border: none; text-align: center;
+  transition: var(--transition);
+  letter-spacing: 0.03em;
+}
+.btn-primary {
+  background: var(--tea-brown); color: white;
+  box-shadow: 0 4px 16px rgba(139,105,20,0.3);
+}
+.btn-primary:hover { background: var(--tea-brown-dark); }
+.btn-outline {
+  background: transparent; color: var(--tea-brown);
+  border: 1.5px solid rgba(139,105,20,0.3);
+}
+.btn-outline:hover { background: rgba(139,105,20,0.05); border-color: var(--tea-brown); }
+.btn-full { width: 100%; margin-top: 12px; }
+.btn-icon { font-size: 1.1rem; margin-right: 6px; }
+
+.recent-section { margin-top: 24px; }
+.recent-section .section-label {
+  font-size: 0.78rem; color: var(--ink-light);
+  margin-bottom: 10px; letter-spacing: 0.05em;
+}
+.recent-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--porcelain); margin-bottom: 8px;
+  cursor: pointer; transition: var(--transition);
+}
+.recent-item:hover { background: rgba(212,167,106,0.1); }
+.recent-item .ri-icon { font-size: 1.5rem; }
+.recent-item .ri-name { font-family: var(--font-song); font-size: 0.9rem; }
+.recent-item .ri-time { margin-left: auto; font-size: 0.75rem; color: var(--ink-light); }
+
+/* ============================================================
+   识别结果页 — Result
+   ============================================================ */
+.result-header {
+  display: flex; gap: 20px; align-items: flex-start;
+  padding: 20px;
+  background: var(--porcelain);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(139,105,20,0.10);
+}
+.result-thumb {
+  width: 100px; height: 100px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #E8D5B0, #D4C090);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; flex-shrink: 0;
+  border: 1px solid rgba(139,105,20,0.15);
+}
+.result-info h2 {
+  font-family: var(--font-song); font-size: 1.6rem;
+  letter-spacing: 0.06em; color: var(--ink-black);
+}
+.result-info .en-name {
+  font-family: var(--font-en); font-style: italic;
+  color: var(--ink-light); font-size: 0.85rem;
+}
+.result-meta { margin-top: 6px; font-size: 0.82rem; color: var(--ink-gray); }
+.result-meta span {
+  display: inline-block; padding: 2px 10px;
+  background: rgba(123,160,91,0.1); border-radius: 20px;
+  margin: 2px 4px 2px 0;
+  font-size: 0.75rem; color: var(--bamboo-dark);
+}
+.confidence-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 20px;
+  background: rgba(123,160,91,0.12); color: var(--bamboo-dark);
+  font-size: 0.75rem; margin-top: 6px;
+}
+
+/* 风味标签 */
+.flavor-tags {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0;
+}
+.flavor-tag {
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 0.82rem; font-family: var(--font-song);
+  background: linear-gradient(135deg, rgba(139,105,20,0.06), rgba(212,167,106,0.1));
+  border: 1px solid rgba(139,105,20,0.15);
+  color: var(--tea-brown-dark);
+  letter-spacing: 0.03em;
+}
+
+/* 操作卡片 */
+.action-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.action-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; border-radius: var(--radius-md);
+  cursor: pointer; transition: var(--transition);
+}
+.action-card.accent {
+  background: linear-gradient(135deg, rgba(139,105,20,0.06), rgba(212,167,106,0.08));
+  border: 1.5px solid rgba(139,105,20,0.2);
+}
+.action-card.normal {
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.08);
+}
+.action-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.action-card .ac-icon { font-size: 1.6rem; }
+.action-card .ac-text h4 { font-family: var(--font-song); font-size: 0.95rem; }
+.action-card .ac-text p { font-size: 0.75rem; color: var(--ink-light); }
+
+/* ============================================================
+   风味翻译页 — Flavor Translate
+   ============================================================ */
+.tea-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 24px;
+  background: rgba(212,167,106,0.12);
+  font-family: var(--font-song); font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.market-tabs {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.market-tab {
+  padding: 10px 18px; border-radius: 24px;
+  font-size: 0.82rem; cursor: pointer;
+  border: 1px solid rgba(139,105,20,0.15);
+  background: var(--porcelain);
+  transition: var(--transition);
+  font-family: var(--font-ui);
+}
+.market-tab.active {
+  background: var(--tea-brown); color: white;
+  border-color: var(--tea-brown);
+}
+.market-tab:hover:not(.active) {
+  border-color: var(--tea-brown);
+  background: rgba(139,105,20,0.04);
+}
+
+.translation-card {
+  padding: 24px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(139,105,20,0.04), rgba(212,167,106,0.06));
+  border: 1px solid rgba(139,105,20,0.12);
+}
+.translation-card .ref-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 16px;
+  font-size: 0.75rem; font-family: var(--font-ui);
+  background: rgba(123,160,91,0.12); color: var(--bamboo-dark);
+  margin-bottom: 14px;
+}
+.translation-card .t-text {
+  font-family: var(--font-en); font-size: 1rem;
+  font-style: italic; line-height: 1.8; color: var(--ink-black);
+  padding: 16px; background: rgba(254,254,250,0.7);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--amber-tea);
+}
+
+.mapping-table {
+  width: 100%; margin-top: 18px;
+  border-collapse: collapse;
+}
+.mapping-table th {
+  text-align: left; padding: 10px 14px;
+  font-size: 0.78rem; color: var(--ink-light);
+  border-bottom: 2px solid rgba(139,105,20,0.15);
+  font-family: var(--font-song);
+}
+.mapping-table td {
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(139,105,20,0.06);
+}
+.mapping-table .chinese { font-family: var(--font-song); color: var(--tea-brown); }
+.mapping-table .arrow { color: var(--ink-light); text-align: center; }
+.mapping-table .target { color: var(--ink-black); }
+
+/* ============================================================
+   品鉴卡页 — Tasting Card
+   ============================================================ */
+.card-shell {
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.15);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+.card-shell::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 4px;
+  background: linear-gradient(to right, var(--tea-brown), var(--amber-tea), var(--bamboo-green));
+}
+.card-shell .card-tea-header {
+  display: flex; gap: 16px; align-items: center; margin-bottom: 20px;
+}
+.card-shell .card-thumb {
+  width: 80px; height: 80px; border-radius: 12px;
+  background: linear-gradient(135deg, #D4C090, #C4B080);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; flex-shrink: 0;
+}
+.card-shell .card-tea-info h3 {
+  font-family: var(--font-song); font-size: 1.3rem; letter-spacing: 0.05em;
+}
+.card-shell .card-tea-info .card-sub {
+  font-size: 0.78rem; color: var(--ink-light);
+}
+
+/* 风味轮 */
+.flavor-wheel {
+  display: flex; align-items: center; justify-content: center;
+  margin: 16px 0; gap: 20px;
+}
+.wheel-ring {
+  width: 140px; height: 140px; border-radius: 50%;
+  border: 2px solid rgba(139,105,20,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; color: var(--ink-light);
+  position: relative;
+}
+.wheel-center { font-family: var(--font-song); color: var(--tea-brown); font-weight: 600; }
+.wheel-labels {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  font-size: 0.78rem;
+}
+.wheel-labels .wl-item { display: flex; align-items: center; gap: 6px; }
+.wl-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+}
+.wl-dot.filled { background: var(--bamboo-green); }
+.wl-dot.empty { background: rgba(123,160,91,0.2); }
+
+/* 冲泡指南 */
+.brew-guide {
+  margin-top: 18px; padding: 16px;
+  background: rgba(212,167,106,0.08);
+  border-radius: var(--radius-sm);
+}
+.brew-guide h4 {
+  font-family: var(--font-song); font-size: 0.95rem;
+  margin-bottom: 10px; color: var(--tea-brown);
+}
+.brew-params { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.brew-param {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; padding: 6px 0;
+  border-bottom: 1px dotted rgba(139,105,20,0.1);
+}
+.brew-param .bp-label { color: var(--ink-light); }
+.brew-param .bp-value { font-weight: 500; }
+
+/* 多语言翻译条 */
+.trans-strip {
+  margin-top: 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.trans-strip .ts-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: rgba(254,254,250,0.8);
+  font-size: 0.82rem;
+}
+.trans-strip .ts-flag { font-size: 1.2rem; flex-shrink: 0; }
+.trans-strip .ts-desc { color: var(--ink-gray); font-style: italic; }
+
+/* ============================================================
+   知识库页 — Knowledge Base
+   ============================================================ */
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 24px;
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.12);
+  margin-bottom: 20px;
+}
+.search-bar input {
+  flex: 1; border: none; background: transparent;
+  font-size: 0.88rem; font-family: var(--font-hei);
+  color: var(--ink-black); outline: none;
+}
+.search-bar input::placeholder { color: var(--ink-light); }
+
+.knowledge-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.knowledge-card {
+  padding: 24px 16px; border-radius: var(--radius-md);
+  text-align: center; cursor: pointer;
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.08);
+  transition: var(--transition);
+}
+.knowledge-card:hover { border-color: rgba(139,105,20,0.2); box-shadow: var(--shadow-sm); }
+.knowledge-card .kc-icon { font-size: 2.2rem; margin-bottom: 8px; display: block; }
+.knowledge-card .kc-title {
+  font-family: var(--font-song); font-size: 0.95rem;
+  color: var(--ink-black); letter-spacing: 0.04em;
+}
+.knowledge-card .kc-sub {
+  font-size: 0.72rem; color: var(--ink-light); margin-top: 4px;
+}
+
+/* ============================================================
+   内容工坊页 — Content Studio
+   ============================================================ */
+.studio-step {
+  margin-bottom: 20px;
+}
+.studio-step .step-label {
+  font-size: 0.8rem; color: var(--ink-light);
+  margin-bottom: 8px; letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* 选择芯片 */
+.chip-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.chip {
+  padding: 10px 18px; border-radius: 24px;
+  font-size: 0.84rem; cursor: pointer;
+  border: 1px solid rgba(139,105,20,0.15);
+  background: var(--porcelain);
+  transition: var(--transition);
+  font-family: var(--font-hei);
+}
+.chip.selected {
+  background: var(--tea-brown); color: white;
+  border-color: var(--tea-brown);
+}
+.chip:hover:not(.selected) {
+  border-color: var(--tea-brown); background: rgba(139,105,20,0.04);
+}
+
+/* 多选 */
+.checkbox-row { display: flex; flex-direction: column; gap: 8px; }
+.check-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--porcelain); font-size: 0.85rem;
+  cursor: pointer; transition: var(--transition);
+}
+.check-option:hover { background: rgba(139,105,20,0.04); }
+.check-box {
+  width: 20px; height: 20px; border-radius: 4px;
+  border: 2px solid rgba(139,105,20,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; flex-shrink: 0;
+}
+.check-box.checked { background: var(--tea-brown); border-color: var(--tea-brown); color: white; }
+
+/* 生成结果 */
+.generated-list { margin-top: 16px; }
+.gen-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: var(--porcelain);
+  border: 1px solid rgba(139,105,20,0.08);
+  margin-bottom: 8px;
+  transition: var(--transition);
+}
+.gen-item:hover { border-color: rgba(139,105,20,0.2); }
+.gen-item .gi-icon { font-size: 1.2rem; }
+.gen-item .gi-name { flex: 1; font-size: 0.85rem; }
+.gen-item .gi-actions { display: flex; gap: 6px; }
+.btn-sm {
+  padding: 6px 14px; border-radius: 16px;
+  font-size: 0.75rem; cursor: pointer; border: 1px solid rgba(139,105,20,0.2);
+  background: transparent; color: var(--tea-brown);
+  transition: var(--transition); font-family: var(--font-hei);
+}
+.btn-sm:hover { background: var(--tea-brown); color: white; border-color: var(--tea-brown); }
+
+/* ============================================================
+   设置页 — Settings
+   ============================================================ */
+.settings-section {
+  margin-bottom: 24px;
+}
+.settings-section .ss-title {
+  font-family: var(--font-song); font-size: 0.9rem;
+  color: var(--tea-brown); margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(139,105,20,0.08);
+}
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid rgba(139,105,20,0.05);
+}
+.setting-row .sr-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.88rem;
+}
+.setting-row .sr-icon { font-size: 1.2rem; }
+.setting-row .sr-hint {
+  font-size: 0.72rem; color: var(--ink-light);
+  margin-top: 2px;
+}
+.btn-danger {
+  color: var(--cinnabar); border-color: rgba(192,64,64,0.25);
+  font-family: var(--font-hei);
+}
+.btn-danger:hover { background: rgba(192,64,64,0.06); }
+
+.about-line {
+  text-align: center; font-size: 0.75rem; color: var(--ink-light);
+  padding: 16px 0;
+}
+
+/* ============================================================
+   Bottom Navigation
+   ============================================================ */
+.bottom-nav {
+  position: sticky; bottom: 0;
+  display: flex; justify-content: space-around;
+  padding: 10px 0 16px;
+  background: rgba(254,254,250,0.92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(139,105,20,0.10);
+  z-index: 10;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 0.68rem; color: var(--ink-light);
+  cursor: pointer; transition: var(--transition);
+  border: none; background: none;
+  font-family: var(--font-hei);
+  padding: 4px 12px;
+}
+.nav-item:hover, .nav-item.active {
+  color: var(--tea-brown);
+}
+.nav-item .ni-icon { font-size: 1.3rem; }
+
+/* ============================================================
+   Responsive & Print
+   ============================================================ */
+@media (max-width: 480px) {
+  .app-container { max-width: 100%; }
+}
+
+/* 选中文字 */
+::selection { background: rgba(212,167,106,0.3); color: var(--ink-black); }
+</style>
+</head>
+<body>
+
+<!-- ============ 背景装饰层 ============ -->
+<div class="bg-layer">
+  <div class="mountain"></div>
+  <div class="mist"></div>
+  <div class="bamboo-left"></div>
+  <div class="bamboo-right"></div>
+  <div class="tea-leaf"></div>
+  <div class="tea-leaf"></div>
+  <div class="tea-leaf"></div>
+  <div class="tea-leaf"></div>
+</div>
+
+<!-- ============ 应用主体 ============ -->
+<div class="app-container">
+
+  <!-- ========== 顶栏 ========== -->
+  <header class="top-bar">
+    <span class="bamboo-icon">🎋</span>
+    <span class="page-title" id="pageTitle">中国茶全球表达</span>
+    <button class="lang-switch" id="langSwitch" title="切换语言">EN / 中文 / 日本語</button>
+  </header>
+
+  <!-- ==================================================================
+       第1页：导航页 Splash
+       ================================================================== -->
+  <section class="page active" id="page-home">
+    <div class="splash-hero">
+      <div class="seal-mark">茶<br>言</div>
+      <h1>中国茶<br>全球表达</h1>
+      <p class="subtitle">Chinese Tea Universal Translator</p>
+      <div class="ink-line"></div>
+      <p style="font-size:0.85rem;color:var(--ink-gray);max-width:280px;margin:0 auto;">
+        拍一杯茶，让世界<strong style="color:var(--tea-brown);">说得清、喝得懂、传得开</strong>
+      </p>
+    </div>
+
+    <div class="hero-cards">
+      <div class="hero-card primary" onclick="switchPage('identify')">
+        <span class="card-icon">📷</span>
+        <div class="card-body">
+          <h3>拍照识茶</h3>
+          <p>拍照或上传，秒懂这杯茶</p>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+      <div class="hero-card" onclick="switchPage('flavor')">
+        <span class="card-icon">🌐</span>
+        <div class="card-body">
+          <h3>风味翻译</h3>
+          <p>用红酒/咖啡的语言重新理解中国茶</p>
+        </div>
+        <span class="card-arrow">→</span>
+      </div>
+    </div>
+
+    <div class="secondary-grid">
+      <div class="mini-card" onclick="switchPage('knowledge')">
+        <span class="mi-icon">📚</span>
+        <div class="mi-label">茶文化知识库</div>
+      </div>
+      <div class="mini-card" onclick="switchPage('studio')">
+        <span class="mi-icon">🎨</span>
+        <div class="mi-label">内容工坊</div>
+      </div>
+      <div class="mini-card" onclick="switchPage('tasting')">
+        <span class="mi-icon">📋</span>
+        <div class="mi-label">品鉴卡</div>
+      </div>
+      <div class="mini-card" onclick="switchPage('settings')">
+        <span class="mi-icon">⚙️</span>
+        <div class="mi-label">设置</div>
+      </div>
+    </div>
+
+    <div class="footer-brand">
+      八马茶业 × AI 先锋未来人才大赛<br>
+      <span>十三代非遗传承 · 中国茶走向世界</span>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第2页：拍照识茶页
+       ================================================================== -->
+  <section class="page" id="page-identify">
+    <div class="camera-frame">
+      <div class="camera-crosshair"></div>
+      <div class="camera-hint">
+        <span class="cam-icon">📷</span>
+        请将茶叶 / 茶汤 / 包装<br>置于框内拍摄
+      </div>
+    </div>
+
+    <div class="upload-row">
+      <button class="btn btn-outline">📁 从相册选择</button>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="switchPage('result')">
+      <span class="btn-icon">🔍</span> 开始识别
+    </button>
+
+    <div class="recent-section">
+      <div class="section-label">── 最近识别 ──</div>
+      <div class="recent-item" onclick="switchPage('result')">
+        <span class="ri-icon">🍵</span>
+        <span class="ri-name">铁观音 · Tieguanyin</span>
+        <span class="ri-time">2分钟前</span>
+      </div>
+      <div class="recent-item">
+        <span class="ri-icon">🍂</span>
+        <span class="ri-name">大红袍 · Da Hong Pao</span>
+        <span class="ri-time">昨天</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第3页：识别结果页
+       ================================================================== -->
+  <section class="page" id="page-result">
+    <div class="result-header">
+      <div class="result-thumb">🍃</div>
+      <div class="result-info">
+        <h2>铁观音</h2>
+        <p class="en-name">Tieguanyin · Iron Goddess of Mercy</p>
+        <div class="result-meta">
+          <span>青茶（乌龙茶）</span>
+          <span>福建安溪</span>
+          <span>半发酵</span>
+        </div>
+        <div class="confidence-badge">✅ AI 识别置信度 97%</div>
+      </div>
+    </div>
+
+    <div class="flavor-tags">
+      <span class="flavor-tag">🌺 兰花清香</span>
+      <span class="flavor-tag">✨ 观音韵</span>
+      <span class="flavor-tag">💧 回甘强</span>
+      <span class="flavor-tag">🪨 矿物感</span>
+    </div>
+
+    <div class="action-cards">
+      <div class="action-card accent" onclick="switchPage('flavor')">
+        <span class="ac-icon">🌐</span>
+        <div class="ac-text">
+          <h4>查看风味翻译 →</h4>
+          <p>用红酒 / 咖啡的语言重新理解这杯茶</p>
+        </div>
+      </div>
+      <div class="action-card normal" onclick="switchPage('tasting')">
+        <span class="ac-icon">📋</span>
+        <div class="ac-text">
+          <h4>查看完整品鉴卡 →</h4>
+          <p>冲泡指南 · 产地故事 · 品质等级</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1;">💾 保存到我的档案</button>
+      <button class="btn btn-primary" style="flex:1;">📤 分享品鉴卡</button>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第4页：风味翻译页
+       ================================================================== -->
+  <section class="page" id="page-flavor">
+    <div class="tea-chip">🍃 当前茶品：铁观音 Tieguanyin</div>
+
+    <p style="font-size:0.82rem;color:var(--ink-light);margin-bottom:10px;">选择对照市场：</p>
+    <div class="market-tabs">
+      <span class="market-tab active">🇺🇸 北美</span>
+      <span class="market-tab">🇯🇵 日本</span>
+      <span class="market-tab">🇫🇷 法国</span>
+      <span class="market-tab">🇬🇧 英国</span>
+      <span class="market-tab">🇦🇪 中东</span>
+    </div>
+
+    <div class="translation-card">
+      <div class="ref-badge">🍷 红酒体系 + ☕ 精品咖啡对照</div>
+
+      <div class="t-text">
+        "Floral like a Napa Valley Sauvignon Blanc,<br>
+        with the <strong>mineral complexity</strong> of a Chablis.<br>
+        A <strong>lingering natural sweetness</strong><br>
+        with zero bitterness —<br>
+        remarkably smooth."
+      </div>
+
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>中文风味</th>
+            <th></th>
+            <th>对照翻译</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="chinese">兰花香</td>
+            <td class="arrow">→</td>
+            <td class="target">Sauvignon Blanc floral notes</td>
+          </tr>
+          <tr>
+            <td class="chinese">观音韵</td>
+            <td class="arrow">→</td>
+            <td class="target">Chablis mineral finish</td>
+          </tr>
+          <tr>
+            <td class="chinese">回甘</td>
+            <td class="arrow">→</td>
+            <td class="target">Lingering natural sweetness</td>
+          </tr>
+          <tr>
+            <td class="chinese">醇厚感</td>
+            <td class="arrow">→</td>
+            <td class="target">Medium body, velvety smooth</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1;">📋 复制品鉴文案</button>
+      <button class="btn btn-primary" style="flex:1;">🌏 切换市场</button>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第5页：品鉴卡页
+       ================================================================== -->
+  <section class="page" id="page-tasting">
+    <div class="card-shell">
+      <div class="card-tea-header">
+        <div class="card-thumb">🍃</div>
+        <div class="card-tea-info">
+          <h3>铁观音</h3>
+          <p class="card-sub">Tieguanyin · 青茶（乌龙茶）</p>
+          <p class="card-sub">产地：福建安溪 · 2026 春茶</p>
+        </div>
+      </div>
+
+      <!-- 风味轮 -->
+      <h4 style="font-family:var(--font-song);font-size:0.9rem;color:var(--tea-brown);margin-bottom:8px;">🍥 风味轮</h4>
+      <div class="flavor-wheel">
+        <div class="wheel-ring">
+          <span class="wheel-center">风味<br>轮盘</span>
+        </div>
+        <div class="wheel-labels">
+          <div class="wl-item"><span class="wl-dot filled"></span> 花香 ●●●●○</div>
+          <div class="wl-item"><span class="wl-dot filled"></span> 鲜爽 ●●●●○</div>
+          <div class="wl-item"><span class="wl-dot filled"></span> 甘甜 ●●●●○</div>
+          <div class="wl-item"><span class="wl-dot empty"></span> 果香 ●●○○○</div>
+          <div class="wl-item"><span class="wl-dot filled"></span> 焙火 ●●●○○</div>
+          <div class="wl-item"><span class="wl-dot empty"></span> 醇厚 ●●●○○</div>
+        </div>
+      </div>
+
+      <!-- 冲泡指南 -->
+      <div class="brew-guide">
+        <h4>🫖 冲泡指南</h4>
+        <div class="brew-params">
+          <div class="brew-param"><span class="bp-label">水温</span><span class="bp-value">95°C</span></div>
+          <div class="brew-param"><span class="bp-label">茶水比</span><span class="bp-value">1 : 20</span></div>
+          <div class="brew-param"><span class="bp-label">第一泡</span><span class="bp-value">10 秒出汤</span></div>
+          <div class="brew-param"><span class="bp-label">可冲泡</span><span class="bp-value">7 次以上</span></div>
+          <div class="brew-param" style="grid-column:1/-1;"><span class="bp-label">建议器具</span><span class="bp-value">盖碗 / 紫砂壶</span></div>
+        </div>
+      </div>
+
+      <!-- 多语言风味对照 -->
+      <div class="trans-strip" style="margin-top:16px;">
+        <div class="ts-item">🇺🇸 <span class="ts-desc">≈ Napa Sauvignon Blanc, floral mineral finish</span></div>
+        <div class="ts-item">🇯🇵 <span class="ts-desc">≈ 玉露級の旨味 + 蘭の清らかな香り</span></div>
+        <div class="ts-item">🇫🇷 <span class="ts-desc">≈ Bourgogne Blanc floral, finale minérale</span></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px;font-size:0.75rem;color:var(--ink-light);">
+      🏷️ 八马茶业 · 十三代非遗传承
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第6页：知识库页
+       ================================================================== -->
+  <section class="page" id="page-knowledge">
+    <div class="search-bar">
+      <span>🔍</span>
+      <input type="text" placeholder="搜索茶品种、产地、工艺...">
+    </div>
+
+    <div class="knowledge-grid">
+      <div class="knowledge-card">
+        <span class="kc-icon">🍃</span>
+        <div class="kc-title">品种探索</div>
+        <div class="kc-sub">六大茶类 · 100+ 品种</div>
+      </div>
+      <div class="knowledge-card">
+        <span class="kc-icon">🌍</span>
+        <div class="kc-title">产地探索</div>
+        <div class="kc-sub">核心产区 · 风土解密</div>
+      </div>
+      <div class="knowledge-card">
+        <span class="kc-icon">🔧</span>
+        <div class="kc-title">工艺库</div>
+        <div class="kc-sub">制茶工序 · 非遗技艺</div>
+      </div>
+      <div class="knowledge-card">
+        <span class="kc-icon">📖</span>
+        <div class="kc-title">品牌文化</div>
+        <div class="kc-sub">八马故事 · 十三代传承</div>
+      </div>
+    </div>
+
+    <div class="recent-section">
+      <div class="section-label">── 最近浏览 ──</div>
+      <div class="recent-item">
+        <span class="ri-icon">🍃</span>
+        <span class="ri-name">铁观音品种详解</span>
+        <span class="ri-time">→</span>
+      </div>
+      <div class="recent-item">
+        <span class="ri-icon">🌍</span>
+        <span class="ri-name">武夷山岩茶产区</span>
+        <span class="ri-time">→</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第7页：内容工坊页
+       ================================================================== -->
+  <section class="page" id="page-studio">
+    <div class="studio-step">
+      <div class="step-label">第 1 步：选择茶品</div>
+      <div class="chip-row">
+        <span class="chip selected">🍃 铁观音</span>
+        <span class="chip">🍂 大红袍</span>
+        <span class="chip">🌱 龙井</span>
+        <span class="chip">+ 更多</span>
+      </div>
+    </div>
+
+    <div class="studio-step">
+      <div class="step-label">第 2 步：选择目标市场</div>
+      <div class="chip-row">
+        <span class="chip selected">🇺🇸 北美</span>
+        <span class="chip">🇯🇵 日本</span>
+        <span class="chip">🇫🇷 法国</span>
+        <span class="chip">🇬🇧 英国</span>
+      </div>
+    </div>
+
+    <div class="studio-step">
+      <div class="step-label">第 3 步：选择物料类型</div>
+      <div class="checkbox-row">
+        <label class="check-option">
+          <span class="check-box checked">✓</span> 品鉴卡
+        </label>
+        <label class="check-option">
+          <span class="check-box checked">✓</span> Instagram 文案
+        </label>
+        <label class="check-option">
+          <span class="check-box"> </span> TikTok 脚本
+        </label>
+        <label class="check-option">
+          <span class="check-box"> </span> 门店话术
+        </label>
+        <label class="check-option">
+          <span class="check-box"> </span> 产品详情页
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" style="margin-bottom:20px;">
+      ✨ 一键生成
+    </button>
+
+    <div class="section-label">── 生成结果 ──</div>
+    <div class="generated-list">
+      <div class="gen-item">
+        <span class="gi-icon">📄</span>
+        <span class="gi-name">铁观音_品鉴卡_北美版</span>
+        <div class="gi-actions">
+          <button class="btn-sm">预览</button>
+          <button class="btn-sm">下载</button>
+        </div>
+      </div>
+      <div class="gen-item">
+        <span class="gi-icon">📄</span>
+        <span class="gi-name">铁观音_Instagram_北美版</span>
+        <div class="gi-actions">
+          <button class="btn-sm">预览</button>
+          <button class="btn-sm">下载</button>
+        </div>
+      </div>
+      <div class="gen-item">
+        <span class="gi-icon">📄</span>
+        <span class="gi-name">铁观音_TikTok脚本_北美版</span>
+        <div class="gi-actions">
+          <button class="btn-sm">预览</button>
+          <button class="btn-sm">下载</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================================
+       第8页：设置页
+       ================================================================== -->
+  <section class="page" id="page-settings">
+    <div class="settings-section">
+      <h3 class="ss-title">📦 数据管理</h3>
+      <div class="setting-row">
+        <div>
+          <div class="sr-label"><span class="sr-icon">📥</span> 导入数据</div>
+          <div class="sr-hint">从 JSON / CSV 导入品鉴记录和收藏</div>
+        </div>
+        <button class="btn-sm">选择文件</button>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="sr-label"><span class="sr-icon">📤</span> 导出数据</div>
+          <div class="sr-hint">导出全部品鉴记录、收藏、偏好</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm">JSON</button>
+          <button class="btn-sm">CSV</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="sr-label"><span class="sr-icon">🗑️</span> 清除缓存</div>
+          <div class="sr-hint">清除浏览器中所有本地数据</div>
+        </div>
+        <button class="btn-sm btn-danger">清除全部</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3 class="ss-title">⚙️ 偏好设置</h3>
+      <div class="setting-row">
+        <span class="sr-label">🌐 界面语言</span>
+        <span style="font-size:0.85rem;color:var(--tea-brown);">中文 ▼</span>
+      </div>
+      <div class="setting-row">
+        <span class="sr-label">🎯 默认对照市场</span>
+        <span style="font-size:0.85rem;color:var(--tea-brown);">北美 ▼</span>
+      </div>
+      <div class="setting-row">
+        <span class="sr-label">💾 自动保存</span>
+        <span style="font-size:0.85rem;color:var(--bamboo-green);">已开启 ✓</span>
+      </div>
+    </div>
+
+    <div class="about-line">
+      版本 v1.0 · 数据存储于浏览器本地<br>
+      八马茶业 × 2026 AI 先锋未来人才大赛
+    </div>
+  </section>
+
+  <!-- ========== 底部导航栏 ========== -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="home" onclick="switchPage('home')">
+      <span class="ni-icon">🏠</span> 首页
+    </button>
+    <button class="nav-item" data-page="identify" onclick="switchPage('identify')">
+      <span class="ni-icon">📷</span> 识茶
+    </button>
+    <button class="nav-item" data-page="flavor" onclick="switchPage('flavor')">
+      <span class="ni-icon">🌐</span> 翻译
+    </button>
+    <button class="nav-item" data-page="tasting" onclick="switchPage('tasting')">
+      <span class="ni-icon">📋</span> 品鉴
+    </button>
+    <button class="nav-item" data-page="settings" onclick="switchPage('settings')">
+      <span class="ni-icon">⚙️</span> 设置
+    </button>
+  </nav>
+</div>
+
+<!-- ============================================================
+     Page Switching Script
+     ============================================================ -->
+<script>
+function switchPage(pageName) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // Show target
+  const target = document.getElementById('page-' + pageName);
+  if (target) target.classList.add('active');
+
+  // Update bottom nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    if (n.dataset.page === pageName) n.classList.add('active');
+  });
+
+  // Update top bar title
+  const titles = {
+    home: '中国茶全球表达',
+    identify: '拍照识茶',
+    result: '识别结果',
+    flavor: '风味翻译',
+    tasting: '品鉴卡',
+    knowledge: '茶文化知识库',
+    studio: '内容工坊',
+    settings: '设置'
+  };
+  document.getElementById('pageTitle').textContent = titles[pageName] || '中国茶全球表达';
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

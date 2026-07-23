@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>考证错题助手 — 多平台通用</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="错题助手">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+    <style>
+        :root {
+            --primary: #4f46e5; --primary-light: #eef2ff; --primary-dark: #4338ca;
+            --success: #10b981; --success-light: #ecfdf5;
+            --danger: #ef4444; --danger-light: #fef2f2;
+            --warning: #f59e0b; --warning-light: #fffbeb;
+            --bg: #f8fafc; --bg-card: #ffffff;
+            --text: #1e293b; --text-sub: #64748b; --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+            --radius: 12px; --radius-sm: 8px;
+            --transition: 0.2s ease;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6;
+            min-height: 100vh; padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        /* ====== 顶部导航 ====== */
+        .app-header{
+            background: var(--bg-card); border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1rem; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm);
+        }
+        .header-inner{
+            max-width: 960px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
+        }
+        .header-left{ display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0 }
+        .header-brand{ display: flex; align-items: center; gap: 0.35rem; font-weight: 700; font-size: 0.95rem; color: var(--primary); text-decoration: none; white-space: nowrap }
+        .header-brand .icon{ font-size:1.2rem }
+
+        .project-selector{ position: relative }
+        .project-btn{
+            display: flex; align-items: center; gap: 0.3rem;
+            padding: 0.35rem 0.65rem; border-radius: 20px;
+            border: 1.5px solid var(--border); background: var(--bg-card);
+            color: var(--text); font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; transition: all var(--transition); max-width: 160px; white-space: nowrap;
+        }
+        .project-btn:hover{ border-color: var(--primary); background: var(--primary-light) }
+        .project-btn .arrow{ font-size: 0.55rem; color: var(--text-muted); transition: transform var(--transition) }
+        .project-btn.open .arrow{ transform: rotate(180deg) }
+        .project-btn .proj-dot{ width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0 }
+        .project-dropdown{
+            display: none; position: absolute; top: calc(100% + 6px); left: 0;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); min-width: 220px; z-index: 150; overflow: hidden;
+        }
+        .project-dropdown.show{ display: block; animation: fadeDown 0.15s ease }
+        @keyframes fadeDown{ from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+        .project-dropdown .proj-list{ max-height: 220px; overflow-y: auto }
+        .project-dropdown .proj-item{
+            display: flex; align-items: center; gap: 0.45rem;
+            padding: 0.6rem 0.8rem; cursor: pointer; transition: background var(--transition);
+            border-bottom: 1px solid #f1f5f9; font-size: 0.83rem;
+        }
+        .project-dropdown .proj-item:hover{ background: var(--primary-light) }
+        .project-dropdown .proj-item.active{ background: var(--primary-light); color: var(--primary); font-weight: 600 }
+        .project-dropdown .proj-item .proj-name{ flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+        .project-dropdown .proj-item .proj-count{ font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0 }
+        .project-dropdown .proj-actions{
+            display: flex; gap: 0.3rem; padding: 0.5rem 0.7rem;
+            border-top: 1px solid var(--border); background: #f8fafc;
+        }
+        .project-dropdown .proj-actions .btn{ flex:1; font-size: 0.73rem; padding: 0.35rem 0.45rem }
+
+        .header-stats{ display: flex; gap: 0.4rem; font-size: 0.76rem; flex-wrap: wrap }
+        .stat-badge{ background: var(--primary-light); color: var(--primary-dark); padding: 0.2rem 0.55rem; border-radius: 20px; font-weight: 600; white-space: nowrap }
+        .stat-badge.wrong{ background:var(--danger-light); color:var(--danger) }
+        .stat-badge.mastered{ background:var(--success-light); color:var(--success) }
+        .header-actions{ display: flex; gap: 0.35rem; flex-wrap: wrap }
+
+        .open-site-link{
+            display: inline-flex; align-items: center; gap: 0.2rem;
+            font-size: 0.73rem; color: var(--primary); text-decoration: none;
+            padding: 0.28rem 0.55rem; border-radius: 15px; background: var(--primary-light);
+            transition: all var(--transition); white-space: nowrap; font-weight: 500;
+        }
+        .open-site-link:hover{ background: #dbeafe; color: var(--primary-dark) }
+        .open-site-link.hidden{ display: none }
+
+        /* ====== Tab 切换 ====== */
+        .tab-bar{
+            max-width: 960px; margin: 0 auto; padding: 0.6rem 1rem 0;
+            display: flex; gap: 0; border-bottom: 2px solid var(--border);
+            position: sticky; top: 48px; z-index: 98; background: var(--bg);
+        }
+        .tab-btn{
+            padding: 0.55rem 1.2rem; font-size: 0.9rem; font-weight: 600;
+            border: none; background: none; color: var(--text-sub); cursor: pointer;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+            transition: all var(--transition); display: flex; align-items: center; gap: 0.4rem;
+            white-space: nowrap; font-family: inherit;
+        }
+        .tab-btn:hover{ color: var(--text) }
+        .tab-btn.active{ color: var(--primary); border-bottom-color: var(--primary) }
+        .tab-badge{
+            font-size: 0.68rem; padding: 0.1rem 0.45rem; border-radius: 10px;
+            background: #f1f5f9; color: var(--text-sub); font-weight: 500;
+        }
+        .tab-btn.active .tab-badge{ background: var(--primary-light); color: var(--primary) }
+
+        /* ====== 搜索区域 ====== */
+        .search-section{
+            max-width: 960px; margin: 0 auto; padding: 0.75rem 1rem 0;
+        }
+        .search-wrap{ position: relative }
+        .search-input{
+            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; font-size: 0.95rem;
+            border: 2px solid var(--border); border-radius: var(--radius);
+            background: var(--bg-card); color: var(--text); transition: all var(--transition); outline: none;
+        }
+        .search-input:focus{ border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1) }
+        .search-input::placeholder{ color: var(--text-muted) }
+        .search-icon{ position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 1.05rem; color: var(--text-muted); pointer-events: none }
+        .search-clear{ position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.05rem; cursor: pointer; color: var(--text-muted); padding: 0.2rem; display: none; border-radius: 50%; line-height: 1 }
+        .search-clear.visible{ display:block }
+        .search-clear:hover{ color:var(--text); background:var(--border) }
+        .search-hint{ font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; display: flex; align-items: center; gap: 0.25rem }
+        .search-result-count{ font-size: 0.76rem; color: var(--text-sub); margin-top: 0.35rem; font-weight: 500 }
+
+        /* ====== 筛选标签 ====== */
+        .filter-row{
+            max-width: 960px; margin: 0 auto; padding: 0.55rem 1rem 0;
+            display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;
+        }
+        .filter-tab{
+            padding: 0.3rem 0.75rem; border-radius: 20px;
+            border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-sub);
+            font-size: 0.78rem; cursor: pointer; transition: all var(--transition); font-weight: 500; white-space: nowrap; user-select: none;
+        }
+        .filter-tab:hover{ border-color: var(--primary); color: var(--primary) }
+        .filter-tab.active{ background: var(--primary); color: #fff; border-color: var(--primary) }
+        .filter-tab .count{ font-size: 0.68rem; opacity: 0.75; margin-left: 0.1rem }
+        .filter-tab.cheat-toggle{ border-color: var(--success); color: var(--success); font-weight: 700 }
+        .filter-tab.cheat-toggle:hover{ background: var(--success-light) }
+        .filter-tab.cheat-toggle.active{ background: var(--success); color: #fff; border-color: var(--success); animation: pulse 1.5s ease-in-out infinite }
+        @keyframes pulse{ 0%,100%{ box-shadow: 0 0 0 0 rgba(16,185,129,0.4) } 50%{ box-shadow: 0 0 0 8px rgba(16,185,129,0) } }
+
+        /* 答案速查表 */
+        .cheat-table{ width: 100%; border-collapse: collapse; font-size: 0.85rem }
+        .cheat-table th{
+            position: sticky; top: 100px; z-index: 5;
+            background: var(--primary); color: #fff; padding: 0.55rem 0.7rem;
+            font-size: 0.78rem; text-align: left; font-weight: 600;
+        }
+        .cheat-table td{ padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top }
+        .cheat-table tr{ transition: background var(--transition); cursor: default }
+        .cheat-table tr:hover{ background: var(--primary-light) }
+        .cheat-table tr.wrong-row{ background: #fef2f2 }
+        .cheat-table tr.wrong-row:hover{ background: #fee2e2 }
+        .cheat-table .cheat-q{ font-weight: 500; line-height: 1.5 }
+        .cheat-table .cheat-a{
+            display: inline-block; background: var(--success-light); color: #065f46;
+            padding: 0.2rem 0.55rem; border-radius: 4px; font-weight: 700; white-space: nowrap;
+            font-size: 0.9rem;
+        }
+        .cheat-table .cheat-type{ font-size: 0.7rem; white-space: nowrap; color: var(--text-sub) }
+        .cheat-table .cheat-wrong{ font-size: 0.7rem; color: var(--danger); font-weight: 600 }
+        .cheat-table .match-highlight{ background: #fef08a; padding: 0.05em 0.15em; border-radius: 2px }
+
+        /* ====== 内容面板 ====== */
+        .tab-panel{ display: none }
+        .tab-panel.active{ display: block }
+        .main-content{ max-width: 960px; margin: 0 auto; padding: 0.8rem 1rem }
+        .question-list{ display: flex; flex-direction: column; gap: 0.65rem }
+        .empty-state{ text-align: center; padding: 3rem 1.5rem; color: var(--text-muted) }
+        .empty-state .empty-icon{ font-size: 3.5rem; margin-bottom: 0.75rem }
+        .empty-state h3{ color: var(--text-sub); margin-bottom: 0.4rem; font-size: 1.05rem }
+        .empty-state p{ font-size: 0.88rem; line-height: 1.7 }
+
+        /* ---- 题目卡片 ---- */
+        .q-card{
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 0.85rem 1.05rem;
+            box-shadow: var(--shadow-sm); transition: all var(--transition); cursor: default;
+        }
+        .q-card:hover{ box-shadow: var(--shadow); border-color: #cbd5e1 }
+        .q-card-header{ display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap }
+        .q-type-badge{ font-size: 0.66rem; padding: 0.16rem 0.45rem; border-radius: 4px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap }
+        .q-type-badge.single{ background:#dbeafe; color:#1d4ed8 }
+        .q-type-badge.multiple{ background:#fef3c7; color:#b45309 }
+        .q-type-badge.judge{ background:#ede9fe; color:#6d28d9 }
+        .q-wrong-count{ font-size: 0.66rem; padding: 0.16rem 0.45rem; border-radius: 4px; font-weight: 600; white-space: nowrap }
+        .q-wrong-count.zero{ background:#ecfdf5; color:#059669 }
+        .q-wrong-count.one{ background:#fffbeb; color:#b45309 }
+        .q-wrong-count.many{ background:#fef2f2; color:#dc2626 }
+        .q-tags{ display: flex; gap: 0.25rem; flex-wrap: wrap; margin-left: auto }
+        .q-tag{ font-size: 0.62rem; padding: 0.12rem 0.4rem; border-radius: 10px; background:#f1f5f9; color:#64748b }
+        .q-question{ font-size: 0.91rem; font-weight: 500; line-height: 1.65; margin-bottom: 0.4rem; color: var(--text); word-break: break-word }
+        .q-question .match-highlight{ background:#fef08a; padding:0.05em 0.15em; border-radius:2px }
+        .q-options{ font-size: 0.82rem; color: var(--text-sub); margin-bottom: 0.5rem; line-height: 1.75; padding-left: 0.15rem }
+        .q-answer{ display: inline-flex; align-items: center; gap: 0.3rem; background: var(--success-light); color: #065f46; padding: 0.28rem 0.65rem; border-radius: 6px; font-weight: 700; font-size: 0.83rem; margin-bottom: 0.3rem }
+        .q-explanation{ font-size: 0.78rem; color: var(--text-sub); line-height: 1.6; margin-top: 0.28rem; padding: 0.4rem 0.55rem; background:#f8fafc; border-radius:6px; border-left:3px solid var(--primary) }
+        .q-explanation:empty{ display:none }
+        .q-card-actions{ display: flex; gap: 0.3rem; margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid #f1f5f9 }
+
+        /* ====== 导入区域 ====== */
+        .import-bar{ padding: 0.5rem 1rem 0 }
+        @media (max-width:640px){
+            .import-bar{ flex-direction: column; align-items: stretch !important }
+            .import-bar input{ width: 100% }
+        }
+
+        /* ====== 视频进度区域 ====== */
+        .video-toolbar{
+            display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+            margin-bottom: 1rem;
+        }
+        .progress-wrap{ flex:1; min-width: 200px }
+        .progress-bar-outer{
+            height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 0.25rem;
+        }
+        .progress-bar-inner{
+            height: 100%; background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 10px; transition: width 0.5s ease;
+        }
+        .progress-text{ font-size: 0.75rem; color: var(--text-sub); font-weight: 500 }
+        .video-list{ display: flex; flex-direction: column; gap: 0.5rem }
+        .video-item{
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.7rem 0.85rem; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            transition: all var(--transition); cursor: default;
+        }
+        .video-item:hover{ border-color: var(--primary); box-shadow: var(--shadow-sm) }
+        .video-item.watched{ opacity: 0.6; background: #f8fafc }
+        .video-item.watched .video-title{ text-decoration: line-through }
+        .video-check{
+            width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; cursor: pointer;
+            border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; transition: all var(--transition); background: var(--bg-card);
+        }
+        .video-check:hover{ border-color: var(--success) }
+        .video-check.done{ background: var(--success); border-color: var(--success); color: #fff }
+        .video-info{ flex: 1; min-width: 0 }
+        .video-title{ font-size: 0.88rem; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+        .video-meta{ font-size: 0.72rem; color: var(--text-sub); margin-top: 0.1rem }
+        .video-actions{ display: flex; gap: 0.25rem; flex-shrink: 0 }
+
+        /* ====== 视频播放器弹窗 ====== */
+        .player-overlay{
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 250;
+            justify-content: center; align-items: center; padding: 1rem;
+        }
+        .player-overlay.active{ display: flex }
+        .player-dialog{
+            background: #000; border-radius: var(--radius); width: 100%; max-width: 800px;
+            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .player-header{
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.7rem 1rem; background: #1a1a2e; color: #fff;
+        }
+        .player-header .player-title{ font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex:1 }
+        .player-close{
+            background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer;
+            padding: 0.3rem 0.5rem; border-radius: 6px; opacity: 0.7; flex-shrink: 0;
+        }
+        .player-close:hover{ opacity: 1; background: rgba(255,255,255,0.1) }
+        .player-video-wrap{ position: relative; background: #000; min-height: 200px }
+        .player-video-wrap video{ width: 100%; display: block; max-height: 60vh }
+        .player-video-wrap .no-video{
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 4rem 2rem; color: #94a3b8; text-align: center;
+        }
+        .player-video-wrap .no-video .icon{ font-size: 3rem; margin-bottom: 0.75rem }
+        .player-controls{
+            display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1rem;
+            background: #1a1a2e; flex-wrap: wrap;
+        }
+        .speed-group{ display: flex; gap: 0.25rem; flex-wrap: wrap }
+        .speed-btn{
+            padding: 0.3rem 0.55rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);
+            background: transparent; color: #94a3b8; font-size: 0.73rem; font-weight: 600;
+            cursor: pointer; transition: all var(--transition); font-family: inherit; white-space: nowrap;
+        }
+        .speed-btn:hover{ border-color: #fff; color: #fff }
+        .speed-btn.active{ background: var(--primary); border-color: var(--primary); color: #fff }
+        .player-controls .btn-mark-done{ margin-left: auto; font-size: 0.75rem; padding: 0.35rem 0.75rem }
+        .auto-play-label{
+            display: flex; align-items: center; gap: 0.25rem; font-size: 0.73rem;
+            color: #94a3b8; cursor: pointer; white-space: nowrap; user-select: none;
+        }
+        .auto-play-label input{ width: auto; margin: 0; cursor: pointer; accent-color: var(--success) }
+        .auto-play-label:hover{ color: #fff }
+        .player-url-input{
+            flex: 1; min-width: 150px; padding: 0.35rem 0.55rem; font-size: 0.78rem;
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+            background: rgba(255,255,255,0.08); color: #fff; outline: none; font-family: inherit;
+        }
+        .player-url-input::placeholder{ color: #64748b }
+        .player-url-input:focus{ border-color: var(--primary) }
+
+        /* ====== 按钮 ====== */
+        .btn{
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            padding: 0.42rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid transparent;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer;
+            transition: all var(--transition); white-space: nowrap; font-family: inherit;
+        }
+        .btn:active{ transform:scale(0.97) }
+        .btn-primary{ background:var(--primary); color:#fff; border-color:var(--primary) }
+        .btn-primary:hover{ background:var(--primary-dark); box-shadow:var(--shadow-md) }
+        .btn-outline{ background:var(--bg-card); color:var(--text); border-color:var(--border) }
+        .btn-outline:hover{ border-color:var(--primary); color:var(--primary); background:var(--primary-light) }
+        .btn-ghost{ background:transparent; color:var(--text-sub); border-color:transparent }
+        .btn-ghost:hover{ background:#f1f5f9; color:var(--text) }
+        .btn-danger-ghost{ background:transparent; color:var(--text-sub); border-color:transparent }
+        .btn-danger-ghost:hover{ background:var(--danger-light); color:var(--danger) }
+        .btn-sm{ padding:0.26rem 0.5rem; font-size:0.72rem }
+        .btn-xs{ padding:0.18rem 0.4rem; font-size:0.68rem; border-radius:4px }
+
+        .fab{
+            position:fixed; bottom:2rem; right:1.5rem; z-index:90;
+            width:52px; height:52px; border-radius:50%; background:var(--primary); color:#fff;
+            border:none; font-size:1.4rem; cursor:pointer; box-shadow:var(--shadow-lg);
+            transition:all var(--transition); display:flex; align-items:center; justify-content:center;
+        }
+        .fab:hover{ transform:scale(1.08); background:var(--primary-dark) }
+        .fab:active{ transform:scale(0.95) }
+
+        /* ====== 弹窗 ====== */
+        .modal-overlay{
+            display:none; position:fixed; inset:0; background:rgba(15,23,42,0.5); z-index:200;
+            justify-content:center; align-items:flex-start; padding:1.5rem 1rem;
+            overflow-y:auto; backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+        }
+        .modal-overlay.active{ display:flex }
+        .modal-dialog{
+            background:var(--bg-card); border-radius:var(--radius); box-shadow:var(--shadow-lg);
+            width:100%; max-width:600px; padding:1.5rem; animation:modalIn 0.2s ease; margin:auto;
+        }
+        @keyframes modalIn{ from{opacity:0;transform:translateY(-20px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .modal-dialog h2{ font-size:1.1rem; margin-bottom:1.1rem; display:flex; align-items:center; gap:0.5rem }
+        .modal-dialog h3{ font-size:0.95rem; margin-bottom:0.7rem }
+        .form-group{ margin-bottom:0.85rem }
+        .form-group label{ display:block; font-weight:600; font-size:0.82rem; margin-bottom:0.28rem; color:var(--text) }
+        .form-group label .req{ color:var(--danger); margin-left:0.1rem }
+        .form-group input,.form-group textarea,.form-group select{
+            width:100%; padding:0.5rem 0.65rem; font-size:0.86rem;
+            border:1.5px solid var(--border); border-radius:var(--radius-sm);
+            background:var(--bg-card); color:var(--text); transition:all var(--transition);
+            outline:none; font-family:inherit; resize:vertical;
+        }
+        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{
+            border-color:var(--primary); box-shadow:0 0 0 3px rgba(79,70,229,0.08);
+        }
+        .form-group textarea{ min-height:60px }
+        .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:0.65rem }
+        .form-hint{ font-size:0.72rem; color:var(--text-muted); margin-top:0.18rem }
+        .option-row{ display:flex; align-items:center; gap:0.4rem; margin-bottom:0.3rem }
+        .option-row .opt-label{ font-weight:700; font-size:0.85rem; color:var(--primary); width:20px; text-align:center; flex-shrink:0 }
+        .option-row input{ flex:1 }
+        .option-row .btn-remove-opt{ background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:0.15rem; flex-shrink:0 }
+        .option-row .btn-remove-opt:hover{ color:var(--danger) }
+        .modal-actions{ display:flex; gap:0.65rem; justify-content:flex-end; margin-top:1.3rem; padding-top:0.85rem; border-top:1px solid var(--border) }
+
+        .quick-paste-toggle{ font-size:0.76rem; color:var(--primary); cursor:pointer; user-select:none; margin-bottom:0.4rem; display:inline-block }
+        .quick-paste-toggle:hover{ text-decoration:underline }
+        .quick-paste-area{ display:none; margin-bottom:0.85rem }
+        .quick-paste-area.show{ display:block }
+
+        .proj-manage-list{ display:flex; flex-direction:column; gap:0.55rem; max-height:320px; overflow-y:auto; margin-bottom:0.9rem }
+        .proj-manage-item{
+            display:flex; align-items:center; gap:0.65rem; padding:0.7rem 0.85rem;
+            border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg-card); transition:all var(--transition);
+        }
+        .proj-manage-item:hover{ border-color:var(--primary); box-shadow:var(--shadow-sm) }
+        .proj-manage-item .proj-info{ flex:1; min-width:0 }
+        .proj-manage-item .proj-info strong{ font-size:0.88rem; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+        .proj-manage-item .proj-info .meta{ font-size:0.72rem; color:var(--text-sub); margin-top:0.12rem }
+        .proj-manage-item .proj-actions{ display:flex; gap:0.25rem; flex-shrink:0 }
+        .color-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0 }
+
+        .confirm-overlay{
+            display:none; position:fixed; inset:0; background:rgba(15,23,42,0.5); z-index:210;
+            justify-content:center; align-items:center; padding:1rem;
+            backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+        }
+        .confirm-overlay.active{ display:flex }
+        .confirm-dialog{
+            background:var(--bg-card); border-radius:var(--radius); box-shadow:var(--shadow-lg);
+            padding:1.5rem; max-width:380px; width:100%; text-align:center; animation:modalIn 0.2s ease;
+        }
+        .confirm-icon{ font-size:2.5rem; margin-bottom:0.5rem }
+        .confirm-dialog h3{ margin-bottom:0.35rem }
+        .confirm-dialog p{ color:var(--text-sub); font-size:0.86rem; margin-bottom:1.1rem }
+        .confirm-actions{ display:flex; gap:0.65rem; justify-content:center }
+
+        .toast-container{ position:fixed; top:1rem; right:1rem; z-index:300; display:flex; flex-direction:column; gap:0.5rem; pointer-events:none }
+        .toast{
+            background:#1e293b; color:#fff; padding:0.65rem 1rem; border-radius:var(--radius-sm);
+            font-size:0.84rem; font-weight:500; box-shadow:var(--shadow-lg);
+            animation:toastIn 0.3s ease, toastOut 0.3s ease 2.2s forwards; pointer-events:auto; max-width:330px;
+        }
+        .toast.success{ background:#059669 }
+        .toast.error{ background:#dc2626 }
+        @keyframes toastIn{ from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes toastOut{ from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(30px)} }
+
+        @media (max-width:640px){
+            .app-header{ padding:0.45rem 0.65rem }
+            .header-stats{ gap:0.3rem }
+            .stat-badge{ font-size:0.68rem; padding:0.15rem 0.4rem }
+            .project-btn{ max-width:120px; font-size:0.73rem; padding:0.3rem 0.55rem }
+            .tab-bar{ padding:0.45rem 0.65rem 0; top:44px }
+            .tab-btn{ padding:0.45rem 0.8rem; font-size:0.82rem }
+            .search-section{ padding:0.65rem 0.65rem 0 }
+            .search-input{ padding:0.6rem 0.65rem 0.6rem 2.1rem; font-size:0.88rem }
+            .filter-row{ padding:0.4rem 0.65rem 0; gap:0.3rem }
+            .filter-tab{ padding:0.28rem 0.55rem; font-size:0.72rem }
+            .main-content{ padding:0.65rem }
+            .q-card{ padding:0.75rem 0.8rem }
+            .q-question{ font-size:0.84rem }
+            .modal-dialog{ padding:1.2rem; margin:0.25rem }
+            .form-row{ grid-template-columns:1fr }
+            .fab{ bottom:1.5rem; right:1rem; width:46px; height:46px; font-size:1.2rem }
+            .player-dialog{ max-width:100%; border-radius:0 }
+            .player-controls{ gap:0.4rem; padding:0.5rem 0.7rem }
+            .speed-btn{ padding:0.25rem 0.45rem; font-size:0.7rem }
+            .video-item{ padding:0.55rem 0.65rem }
+        }
+
+        @media (prefers-color-scheme:dark){
+            :root{
+                --bg:#0f172a; --bg-card:#1e293b; --text:#e2e8f0;
+                --text-sub:#94a3b8; --text-muted:#64748b; --border:#334155;
+                --shadow-sm:0 1px 2px rgba(0,0,0,0.3); --shadow:0 1px 3px rgba(0,0,0,0.4);
+                --shadow-md:0 4px 6px rgba(0,0,0,0.5); --shadow-lg:0 10px 25px rgba(0,0,0,0.6);
+            }
+            .q-card{ background:#1e293b }
+            .q-explanation{ background:#0f172a }
+            .q-card-actions{ border-top-color:#334155 }
+            .search-input{ background:#1e293b }
+            .modal-dialog{ background:#1e293b }
+            .modal-actions{ border-top-color:#334155 }
+            .btn-outline{ background:#1e293b }
+            .toast{ background:#e2e8f0; color:#0f172a }
+            .form-group input,.form-group textarea,.form-group select{ background:#0f172a }
+            .project-dropdown .proj-actions{ background:#1a2236 }
+            .project-dropdown .proj-item{ border-bottom-color:#334155 }
+            .proj-manage-item{ background:#1e293b }
+            .video-item{ background:#1e293b }
+            .video-item.watched{ background:#1a2236 }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================================================================
+         顶部导航
+         ================================================================ -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="header-left">
+                <a href="#" class="header-brand"><span class="icon">📝</span> 错题助手</a>
+                <div class="project-selector" id="projectSelector">
+                    <button class="project-btn" id="btnProject">
+                        <span class="proj-dot" id="projDot"></span>
+                        <span id="projName">选择项目</span>
+                        <span class="arrow">▾</span>
+                    </button>
+                    <div class="project-dropdown" id="projectDropdown">
+                        <div class="proj-list" id="projList"></div>
+                        <div class="proj-actions">
+                            <button class="btn btn-outline btn-xs" id="btnNewProject">➕ 新建</button>
+                            <button class="btn btn-outline btn-xs" id="btnManageProjects">⚙ 管理</button>
+                        </div>
+                    </div>
+                </div>
+                <a class="open-site-link hidden" id="openSiteLink" href="#" target="_blank">🔗 去考试</a>
+            </div>
+            <div class="header-stats">
+                <span class="stat-badge" id="statTotal">📚 0 题</span>
+                <span class="stat-badge wrong" id="statWrong">❌ 错题 0</span>
+                <span class="stat-badge mastered" id="statMastered">✅ 掌握 0</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline btn-sm" id="btnExport">📤 导出</button>
+                <button class="btn btn-outline btn-sm" id="btnImport">📥 导入</button>
+                <button class="btn btn-primary btn-sm" id="btnAddTop">➕ 添加</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================================================================
+         Tab 切换
+         ================================================================ -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="bank">📚 题库 <span class="tab-badge" id="tabBadgeBank">0</span></button>
+        <button class="tab-btn" data-tab="wrong">❌ 错题库 <span class="tab-badge" id="tabBadgeWrong">0</span></button>
+        <button class="tab-btn" data-tab="videos">📺 视频进度 <span class="tab-badge" id="tabBadgeV">0/0</span></button>
+    </div>
+
+    <!-- ================================================================
+         Tab 面板：题库（完整题库 + 答案速查）
+         ================================================================ -->
+    <div class="tab-panel active" id="panelBank">
+        <!-- 网页导入区 —— 三种导入方式 -->
+        <div class="import-section" id="importSection" style="max-width:960px;margin:0 auto;padding:0.6rem 1rem 0">
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:0.5rem">
+                <span style="font-size:0.85rem;font-weight:700;color:var(--text);white-space:nowrap">📥 导入题库（三选一）：</span>
+                <button class="btn btn-primary btn-sm" id="btnMethodCopy">1️⃣ 手动复制粘贴</button>
+                <button class="btn btn-outline btn-sm" id="btnMethodConsole">2️⃣ 浏览器脚本提取</button>
+                <button class="btn btn-ghost btn-sm" id="btnMethodUrl">3️⃣ 粘贴URL</button>
+            </div>
+
+            <!-- 方法1：浏览器控制台脚本 -->
+            <div class="quick-paste-area" id="consoleGuide" style="background:#1e293b;color:#e2e8f0;border-radius:var(--radius-sm);padding:1rem;margin-bottom:0.5rem">
+                <div style="font-size:0.85rem;margin-bottom:0.75rem;line-height:1.7">
+                    <strong>📌 操作步骤：</strong><br>
+                    ① 在橙点同学登录并进入<strong>考试页面</strong>（做完题看到答案的页面）<br>
+                    ② 打开控制台（任选一种）：<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;🔹 <code style="background:#334155;padding:0.1rem 0.4rem;border-radius:3px">Ctrl+Shift+I</code> 然后点 Console 标签<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;🔹 <code style="background:#334155;padding:0.1rem 0.4rem;border-radius:3px">Ctrl+Shift+J</code> 直接打开控制台<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;🔹 页面空白处<strong>右键 → 检查</strong>（或审查元素）→ Console<br>
+                    ③ 复制下方脚本，粘贴到控制台，按 <strong>回车</strong> 执行<br>
+                    ④ 题目已复制到剪贴板，回到这里粘贴即可
+                </div>
+                <div style="position:relative">
+                    <textarea id="consoleScript" readonly rows="12" style="width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:0.75rem;font-family:'JetBrains Mono','Consolas',monospace;font-size:0.75rem;line-height:1.5;resize:none;outline:none">// === 考证错题助手 - 浏览器提取脚本 ===
+// 在考试结果页面运行此脚本，自动提取所有题目和答案
+
+(function(){
+  const qs = [];
+  // 尝试多种常见页面结构
+  const selectors = [
+    '.question-item', '.exam-question', '.question-wrap',
+    '[class*="question"]', '[class*="topic"]', '.subject-item',
+    '.ant-col', '.item-content', 'fieldset', '.problem-item'
+  ];
+  let items = [];
+  for (const sel of selectors) {
+    items = document.querySelectorAll(sel);
+    if (items.length >= 3) break;
+  }
+  // 如果没找到，尝试从整个页面文本提取
+  if (items.length === 0) {
+    const body = document.body.innerText;
+    copy(body);
+    console.log('✅ 已复制页面全部文本（'+body.length+'字），粘贴到错题助手导入');
+    return;
+  }
+  items.forEach(el => {
+    const text = el.innerText || el.textContent || '';
+    qs.push(text);
+  });
+  const output = qs.join('\n\n---\n\n');
+  copy(output);
+  console.log('✅ 已复制 '+qs.length+' 道题目到剪贴板！粘贴到错题助手即可');
+  console.log('💡 如果结果不理想，请用"手动复制粘贴"方式');
+})();</textarea>
+                    <button class="btn btn-sm" id="btnCopyScript" style="position:absolute;top:0.5rem;right:0.5rem;background:#4f46e5;color:#fff;border:none;font-size:0.72rem">📋 复制脚本</button>
+                </div>
+                <div style="font-size:0.72rem;color:#94a3b8;margin-top:0.5rem">
+                    ⚠️ 不同网站的页面结构不同，如果提取效果不好，请用下方的「手动复制粘贴」方式
+                </div>
+            </div>
+
+            <!-- 方法2：手动复制粘贴 -->
+            <div class="quick-paste-area" id="manualPasteArea">
+                <div class="form-group">
+                    <textarea id="pageContent" rows="10" placeholder="粘贴考试页面的全部文字内容（题目+选项+答案）…&#10;也可以粘贴别人分享的答案文档全文&#10;&#10;最常见做法：考试提交后，在结果页 Ctrl+A 全选 → Ctrl+C 复制 → 到这里 Ctrl+V 粘贴&#10;&#10;支持格式：&#10;1. 题目内容&#10;A. 选项A  B. 选项B  C. 选项C  D. 选项D&#10;正确答案：A&#10;&#10;2. 第二道题…"></textarea>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.6rem">
+                    <button class="btn btn-primary btn-sm" id="btnParsePage">🔍 自动解析全部题目</button>
+                    <button class="btn btn-ghost btn-sm" id="btnCancelPaste">取消</button>
+                </div>
+            </div>
+
+            <!-- 方法3：URL -->
+            <div class="quick-paste-area" id="urlPasteArea">
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+                    <input type="url" id="importUrl" placeholder="粘贴考试网站URL…" style="flex:1;min-width:180px;padding:0.4rem 0.6rem;font-size:0.8rem;border:1.5px solid var(--border);border-radius:6px;outline:none;background:var(--bg-card);color:var(--text)">
+                    <button class="btn btn-outline btn-sm" id="btnFetchUrl">🔍 尝试获取</button>
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.3rem">大部分网站需登录，此方式可能无效，推荐用上面两种</div>
+            </div>
+        </div>
+        <div class="search-section">
+            <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="search" class="search-input" id="searchBank"
+                    placeholder="输入题目关键词快速查找答案…（考试时在这里搜）" autocomplete="off">
+                <button class="search-clear bank-clear" id="btnBankClear" title="清除">✕</button>
+            </div>
+            <div class="search-hint">💡 <span>考试时输入题目关键词，答案一览无余</span></div>
+            <div class="search-result-count" id="bankResultCount"></div>
+        </div>
+        <div class="filter-row">
+            <button class="filter-tab bank-filter active" data-filter="all">全部<span class="count" id="bankCountAll"></span></button>
+            <button class="filter-tab bank-filter" data-filter="single">🔘 单选<span class="count" id="bankCountSingle"></span></button>
+            <button class="filter-tab bank-filter" data-filter="multiple">☑️ 多选<span class="count" id="bankCountMultiple"></span></button>
+            <button class="filter-tab bank-filter" data-filter="judge">⚖️ 判断<span class="count" id="bankCountJudge"></span></button>
+        </div>
+        <main class="main-content">
+            <div class="question-list" id="bankList"></div>
+        </main>
+    </div>
+
+    <!-- ================================================================
+         Tab 面板：错题库（仅错题，详细复习）
+         ================================================================ -->
+    <div class="tab-panel" id="panelWrong">
+        <div class="search-section">
+            <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="search" class="search-input" id="searchWrong"
+                    placeholder="搜索错题…" autocomplete="off">
+                <button class="search-clear wrong-clear" id="btnWrongClear" title="清除">✕</button>
+            </div>
+            <div class="search-result-count" id="wrongResultCount"></div>
+        </div>
+        <div class="filter-row">
+            <button class="filter-tab wrong-filter active" data-filter="all">全部<span class="count" id="wrongCountAll"></span></button>
+            <button class="filter-tab wrong-filter" data-filter="single">🔘 单选<span class="count" id="wrongCountSingle"></span></button>
+            <button class="filter-tab wrong-filter" data-filter="multiple">☑️ 多选<span class="count" id="wrongCountMultiple"></span></button>
+            <button class="filter-tab wrong-filter" data-filter="judge">⚖️ 判断<span class="count" id="wrongCountJudge"></span></button>
+        </div>
+        <main class="main-content">
+            <div class="question-list" id="wrongList"></div>
+        </main>
+    </div>
+
+    <!-- ================================================================
+         Tab 面板：视频进度
+         ================================================================ -->
+    <div class="tab-panel" id="panelVideos">
+        <main class="main-content">
+            <div class="progress-wrap" style="margin-bottom:1rem">
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="videoProgressBar" style="width:0%"></div>
+                </div>
+                <div class="progress-text" id="videoProgressText">已学习 0/0 个视频</div>
+            </div>
+            <div class="video-toolbar">
+                <button class="btn btn-primary btn-sm" id="btnAddVideo">➕ 添加</button>
+                <button class="btn btn-outline btn-sm" id="btnBatchImport">📋 批量导入</button>
+                <button class="btn btn-outline btn-sm" id="btnAutoPlayAll">▶ 自动播放全部</button>
+                <button class="btn btn-outline btn-sm" id="btnMarkAllWatched">⚡ 全部标完</button>
+                <button class="btn btn-ghost btn-sm" id="btnResetAllVideos">↺ 重置</button>
+            </div>
+            <!-- 批量导入区 -->
+            <div class="quick-paste-area" id="batchImportArea" style="margin-bottom:0.8rem">
+                <div class="form-group">
+                    <textarea id="batchVideoText" rows="6" placeholder="每行一个视频，格式：标题 | 视频URL | 时长&#10;&#10;例如：&#10;第1章 AI概述 | https://video.example.com/1.mp4 | 12分钟&#10;第2章 机器学习 | https://video.example.com/2.mp4 | 18分钟&#10;第3章 深度学习 | | 22分钟&#10;&#10;没有URL也可以，留空即可，只做进度追踪"></textarea>
+                </div>
+                <div style="display:flex;gap:0.5rem">
+                    <button class="btn btn-primary btn-sm" id="btnBatchParse">🔍 解析并导入</button>
+                    <button class="btn btn-ghost btn-sm" id="btnBatchCancel">取消</button>
+                </div>
+            </div>
+            <div class="video-list" id="videoList"></div>
+        </main>
+    </div>
+
+    <!-- 浮动按钮 -->
+    <button class="fab" id="fabAdd" title="添加题目">＋</button>
+
+    <!-- ================================================================
+         题目添加/编辑弹窗
+         ================================================================ -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-dialog">
+            <h2 id="modalTitle">➕ 添加新题目</h2>
+            <form id="questionForm" autocomplete="off">
+                <input type="hidden" id="formId">
+                <span class="quick-paste-toggle" id="btnQuickPaste">📋 从考试页面粘贴整题（自动解析）</span>
+                <div class="quick-paste-area" id="quickPasteArea">
+                    <div class="form-group">
+                        <textarea id="pasteArea" rows="5" placeholder="粘贴整道题（含选项和答案），自动解析…&#10;&#10;例如：&#10;1. 机器学习属于人工智能的哪个分支？&#10;A. 符号主义  B. 连接主义  C. 行为主义  D. 以上都是&#10;正确答案：D"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="btnParse">🔍 自动解析</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>题目类型 <span class="req">*</span></label>
+                        <select id="formType" required>
+                            <option value="single">单选题</option><option value="multiple">多选题</option><option value="judge">判断题</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>错题次数</label>
+                        <input type="number" id="formWrongCount" value="0" min="0" max="99" step="1">
+                    </div>
+                </div>
+                <div class="form-group"><label>题目内容 <span class="req">*</span></label><textarea id="formQuestion" rows="3" required placeholder="输入完整的题目内容…"></textarea></div>
+                <div id="optionsSection">
+                    <div class="form-group"><label>选项列表</label><div id="optionsContainer"></div>
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnAddOption">＋ 添加选项</button>
+                    </div>
+                </div>
+                <div class="form-group"><label>正确答案 <span class="req">*</span></label><input type="text" id="formAnswer" required placeholder="单选题写字母（如 A），多选题写字母组合（如 ABD），判断题写 ✓ 或 ✗"></div>
+                <div class="form-group"><label>答案解析</label><textarea id="formExplanation" rows="2" placeholder="记录解析要点…"></textarea></div>
+                <div class="form-group"><label>标签</label><input type="text" id="formTags" placeholder="多个标签用逗号分隔，如：机器学习,监督学习"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="btnCancel">取消</button>
+                    <button type="submit" class="btn btn-primary">💾 保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         视频添加/编辑弹窗
+         ================================================================ -->
+    <div class="modal-overlay" id="videoModalOverlay">
+        <div class="modal-dialog">
+            <h2 id="videoModalTitle">➕ 添加课程视频</h2>
+            <form id="videoForm" autocomplete="off">
+                <input type="hidden" id="videoFormId">
+                <div class="form-group"><label>视频标题 <span class="req">*</span></label><input type="text" id="videoFormTitle" required placeholder="例如：第1章 AI概述与基础概念"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>视频链接（选填）</label><input type="url" id="videoFormUrl" placeholder="粘贴视频直链，支持 mp4/m3u8…"></div>
+                    <div class="form-group"><label>时长</label><input type="text" id="videoFormDuration" placeholder="例如：15分钟"></div>
+                </div>
+                <div class="form-group"><label>备注</label><textarea id="videoFormNote" rows="2" placeholder="补充信息…"></textarea></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="btnVideoCancel">取消</button>
+                    <button type="submit" class="btn btn-primary">💾 保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         视频播放器弹窗
+         ================================================================ -->
+    <div class="player-overlay" id="playerOverlay">
+        <div class="player-dialog">
+            <div class="player-header">
+                <span class="player-title" id="playerTitle">🎬 视频播放</span>
+                <button class="player-close" id="btnPlayerClose">✕</button>
+            </div>
+            <div class="player-video-wrap" id="playerVideoWrap">
+                <video id="playerVideo" controlsList="nodownload" crossorigin="anonymous"></video>
+                <div class="no-video" id="playerNoVideo">
+                    <span class="icon">📺</span>
+                    <p>未提供视频链接</p>
+                    <p style="font-size:0.78rem;margin-top:0.3rem">可以在下方输入或粘贴视频 URL 播放</p>
+                </div>
+            </div>
+            <div class="player-controls">
+                <span style="color:#94a3b8;font-size:0.75rem;white-space:nowrap">倍速：</span>
+                <div class="speed-group" id="speedGroup">
+                    <button class="speed-btn" data-rate="0.5">0.5x</button>
+                    <button class="speed-btn" data-rate="0.75">0.75x</button>
+                    <button class="speed-btn active" data-rate="1">1x</button>
+                    <button class="speed-btn" data-rate="1.5">1.5x</button>
+                    <button class="speed-btn" data-rate="2">2x</button>
+                    <button class="speed-btn" data-rate="3">3x</button>
+                    <button class="speed-btn" data-rate="5">5x</button>
+                    <button class="speed-btn" data-rate="10">10x</button>
+                    <button class="speed-btn" data-rate="16">16x</button>
+                </div>
+                <label class="auto-play-label" id="autoPlayLabel" title="播完后自动标记已看并播放下一个">
+                    <input type="checkbox" id="autoPlayToggle" checked> 🔄 自动连播
+                </label>
+                <input type="text" class="player-url-input" id="playerUrlInput" placeholder="粘贴视频 URL…">
+                <button class="btn btn-outline btn-sm" id="btnPlayerLoadUrl" style="color:#fff;border-color:rgba(255,255,255,0.3)">加载</button>
+                <button class="btn btn-success btn-sm btn-mark-done" id="btnPlayerMarkDone">✅ 标记完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         项目管理弹窗
+         ================================================================ -->
+    <div class="modal-overlay" id="projModalOverlay">
+        <div class="modal-dialog">
+            <h2>⚙ 管理考证项目</h2>
+            <div class="proj-manage-list" id="projManageList"></div>
+            <h3 id="projFormTitle" style="margin-top:1rem">➕ 新建考证项目</h3>
+            <form id="projForm" autocomplete="off">
+                <input type="hidden" id="projFormId">
+                <div class="form-group"><label>证书名称 <span class="req">*</span></label><input type="text" id="projFormName" required placeholder="例如：人工智能训练师（初级）"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>考试平台</label><input type="text" id="projFormWebsiteName" placeholder="例如：橙点同学、驾考宝典…"></div>
+                    <div class="form-group"><label>考试网址</label><input type="url" id="projFormWebsiteUrl" placeholder="https://…"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="btnProjFormCancel">取消编辑</button>
+                    <button type="submit" class="btn btn-primary">💾 保存项目</button>
+                </div>
+            </form>
+            <div class="modal-actions" style="margin-top:0.7rem">
+                <button type="button" class="btn btn-outline" id="btnProjModalClose">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-dialog">
+            <div class="confirm-icon">⚠️</div>
+            <h3 id="confirmTitle">确认删除</h3>
+            <p id="confirmText"></p>
+            <div class="confirm-actions">
+                <button class="btn btn-outline" id="btnConfirmCancel">取消</button>
+                <button class="btn" style="background:#dc2626;color:#fff;border-color:#dc2626" id="btnConfirmOk">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <input type="file" id="fileImport" accept=".json" style="display:none">
+
+    <!-- ================================================================
+         JavaScript
+         ================================================================ -->
+    <script>
+    (function(){
+        'use strict';
+
+        const STORAGE_KEY = 'exam_helper_v2';
+        const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const PROJ_COLORS = ['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316'];
+
+        // ======================== 数据层 ========================
+        function loadStore(){
+            try{
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return { projects: [], activeProjectId: null };
+                const data = JSON.parse(raw);
+                if (Array.isArray(data)) return migrateV1(data);
+                if (!data.projects) data.projects = [];
+                // 确保每个项目有 videos 数组
+                data.projects.forEach(p => { if (!p.videos) p.videos = []; });
+                return data;
+            } catch(e){ return { projects: [], activeProjectId: null }; }
+        }
+        function saveStore(store){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch(e){ showToast('存储空间不足！', 'error'); } }
+        function migrateV1(questions){
+            const project = { id: 'proj_' + Date.now().toString(36), name: '我的第一个考证', websiteName: '', websiteUrl: '', color: PROJ_COLORS[0], createdAt: new Date().toISOString(), questions: questions, videos: [] };
+            const store = { projects: [project], activeProjectId: project.id };
+            saveStore(store); showToast('📦 已自动升级为多项目模式', 'success'); return store;
+        }
+        function getActiveProject(){
+            const store = loadStore();
+            if (!store.activeProjectId && store.projects.length > 0) { store.activeProjectId = store.projects[0].id; saveStore(store); }
+            if (!store.activeProjectId) return null;
+            return store.projects.find(p => p.id === store.activeProjectId) || null;
+        }
+        function updateActiveProject(updater){
+            const store = loadStore();
+            const idx = store.projects.findIndex(p => p.id === store.activeProjectId);
+            if (idx === -1) return;
+            updater(store.projects[idx]);
+            saveStore(store);
+        }
+        function generateId(prefix){ return (prefix||'q') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6) }
+
+        // ======================== DOM 引用 ========================
+        const $ = s => document.querySelector(s);
+        const dom = {
+            projectSelector: $('#projectSelector'), btnProject: $('#btnProject'), projectDropdown: $('#projectDropdown'),
+            projList: $('#projList'), projName: $('#projName'), projDot: $('#projDot'), openSiteLink: $('#openSiteLink'),
+            tabBtns: document.querySelectorAll('.tab-btn'), tabPanels: document.querySelectorAll('.tab-panel'),
+            tabBadgeBank: $('#tabBadgeBank'), tabBadgeWrong: $('#tabBadgeWrong'), tabBadgeV: $('#tabBadgeV'),
+            // 题库
+            searchBank: $('#searchBank'), btnBankClear: $('#btnBankClear'), bankResultCount: $('#bankResultCount'),
+            bankFilters: document.querySelectorAll('.bank-filter'),
+            bankCountAll: $('#bankCountAll'), bankCountSingle: $('#bankCountSingle'), bankCountMultiple: $('#bankCountMultiple'), bankCountJudge: $('#bankCountJudge'),
+            bankList: $('#bankList'),
+            importUrl: $('#importUrl'), pageContent: $('#pageContent'), pagePasteArea: $('#pagePasteArea'),
+            // 错题库
+            searchWrong: $('#searchWrong'), btnWrongClear: $('#btnWrongClear'), wrongResultCount: $('#wrongResultCount'),
+            wrongFilters: document.querySelectorAll('.wrong-filter'),
+            wrongCountAll: $('#wrongCountAll'), wrongCountSingle: $('#wrongCountSingle'), wrongCountMultiple: $('#wrongCountMultiple'), wrongCountJudge: $('#wrongCountJudge'),
+            wrongList: $('#wrongList'),
+            // 统计
+            statTotal: $('#statTotal'), statWrong: $('#statWrong'), statMastered: $('#statMastered'),
+            // 题目弹窗
+            modalOverlay: $('#modalOverlay'), modalTitle: $('#modalTitle'), questionForm: $('#questionForm'),
+            formId: $('#formId'), formType: $('#formType'), formWrongCount: $('#formWrongCount'),
+            formQuestion: $('#formQuestion'), formAnswer: $('#formAnswer'), formExplanation: $('#formExplanation'), formTags: $('#formTags'),
+            optionsSection: $('#optionsSection'), optionsContainer: $('#optionsContainer'), btnAddOption: $('#btnAddOption'),
+            quickPasteArea: $('#quickPasteArea'), pasteArea: $('#pasteArea'),
+            // 视频
+            videoModalOverlay: $('#videoModalOverlay'), videoModalTitle: $('#videoModalTitle'), videoForm: $('#videoForm'),
+            videoFormId: $('#videoFormId'), videoFormTitle: $('#videoFormTitle'), videoFormUrl: $('#videoFormUrl'),
+            videoFormDuration: $('#videoFormDuration'), videoFormNote: $('#videoFormNote'),
+            videoList: $('#videoList'), videoProgressBar: $('#videoProgressBar'), videoProgressText: $('#videoProgressText'),
+            playerOverlay: $('#playerOverlay'), playerTitle: $('#playerTitle'), playerVideo: $('#playerVideo'),
+            playerVideoWrap: $('#playerVideoWrap'), playerNoVideo: $('#playerNoVideo'),
+            playerUrlInput: $('#playerUrlInput'), speedGroup: $('#speedGroup'),
+            // 项目管理
+            projModalOverlay: $('#projModalOverlay'), projManageList: $('#projManageList'), projForm: $('#projForm'),
+            projFormId: $('#projFormId'), projFormName: $('#projFormName'),
+            projFormWebsiteName: $('#projFormWebsiteName'), projFormWebsiteUrl: $('#projFormWebsiteUrl'), projFormTitle: $('#projFormTitle'),
+            // 其他
+            confirmOverlay: $('#confirmOverlay'), confirmTitle: $('#confirmTitle'), confirmText: $('#confirmText'),
+            btnConfirmCancel: $('#btnConfirmCancel'), btnConfirmOk: $('#btnConfirmOk'),
+            toastContainer: $('#toastContainer'), fileImport: $('#fileImport'),
+        };
+
+        let currentBankFilter = 'all', currentWrongFilter = 'all', editingId = null, editingVideoId = null, confirmCallback = null;
+        let currentPlayerVideoId = null, currentTab = 'bank';
+
+        // ======================== Tab 切换 ========================
+        dom.tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                dom.tabBtns.forEach(b => b.classList.remove('active'));
+                dom.tabPanels.forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                const tabName = btn.dataset.tab;
+                const panelMap = { bank: 'panelBank', wrong: 'panelWrong', videos: 'panelVideos' };
+                const panel = document.getElementById(panelMap[tabName]);
+                if (panel) panel.classList.add('active');
+                currentTab = tabName;
+                updateFabVisibility();
+                if (tabName === 'bank') renderBank();
+                else if (tabName === 'wrong') renderWrong();
+                else if (tabName === 'videos') renderVideoList();
+            });
+        });
+        function switchTab(tabName){
+            const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            if (btn) btn.click();
+        }
+        function updateFabVisibility(){
+            const fab = $('#fabAdd');
+            if (currentTab === 'videos') { fab.textContent = '📺'; fab.title = '添加视频'; }
+            else { fab.textContent = '＋'; fab.title = '添加题目'; }
+        }
+
+        // ======================== 项目选择器 ========================
+        function renderProjectSelector(){
+            const store = loadStore();
+            const active = getActiveProject();
+            if (store.projects.length === 0) {
+                dom.projName.textContent = '无项目'; dom.projDot.style.background = '#94a3b8'; dom.openSiteLink.classList.add('hidden');
+            } else if (active) {
+                dom.projName.textContent = active.name; dom.projDot.style.background = active.color || PROJ_COLORS[0];
+                if (active.websiteUrl) { dom.openSiteLink.href = active.websiteUrl; dom.openSiteLink.classList.remove('hidden'); }
+                else { dom.openSiteLink.classList.add('hidden'); }
+            }
+            dom.projList.innerHTML = store.projects.map(p => {
+                const isActive = store.activeProjectId === p.id;
+                const cnt = (p.questions || []).length;
+                const vCnt = (p.videos || []).length;
+                return `<div class="proj-item${isActive ? ' active' : ''}" data-proj-id="${p.id}">
+                    <span class="proj-dot" style="background:${p.color || PROJ_COLORS[0]}"></span>
+                    <span class="proj-name" title="${escAttr(p.name)}">${escHtml(p.name)}</span>
+                    <span class="proj-count">${cnt}题 ${vCnt>0?'📺'+vCnt:''}</span></div>`;
+            }).join('') || '<div class="proj-item" style="color:var(--text-muted);justify-content:center">暂无项目</div>';
+            dom.projList.querySelectorAll('.proj-item[data-proj-id]').forEach(item => {
+                item.addEventListener('click', () => switchProject(item.dataset.projId));
+            });
+        }
+        function switchProject(projId){
+            const store = loadStore();
+            if (!store.projects.find(p => p.id === projId)) return;
+            store.activeProjectId = projId; saveStore(store);
+            dom.projectDropdown.classList.remove('show'); dom.btnProject.classList.remove('open');
+            dom.searchBank.value = ''; dom.searchWrong.value = '';
+            currentBankFilter = 'all'; currentWrongFilter = 'all';
+            dom.bankFilters.forEach(t => t.classList.remove('active'));
+            dom.bankFilters[0].classList.add('active');
+            dom.wrongFilters.forEach(t => t.classList.remove('active'));
+            dom.wrongFilters[0].classList.add('active');
+            renderAll();
+        }
+        dom.btnProject.addEventListener('click', e => {
+            e.stopPropagation();
+            const isOpen = dom.projectDropdown.classList.contains('show');
+            if (isOpen) { dom.projectDropdown.classList.remove('show'); dom.btnProject.classList.remove('open'); }
+            else { renderProjectSelector(); dom.projectDropdown.classList.add('show'); dom.btnProject.classList.add('open'); }
+        });
+        document.addEventListener('click', e => { if (!dom.projectSelector.contains(e.target)) { dom.projectDropdown.classList.remove('show'); dom.btnProject.classList.remove('open'); } });
+
+        // ======================== 项目管理 ========================
+        function openProjManageModal(editProjId){
+            const store = loadStore();
+            dom.projManageList.innerHTML = store.projects.map(p => {
+                const cnt = (p.questions || []).length; const vCnt = (p.videos || []).length;
+                return `<div class="proj-manage-item">
+                    <span class="color-dot" style="background:${p.color||PROJ_COLORS[0]}"></span>
+                    <div class="proj-info"><strong>${escHtml(p.name)}</strong>
+                        <div class="meta">${cnt} 题 · ${vCnt} 个视频${p.websiteName?' · '+escHtml(p.websiteName):''}${p.websiteUrl?' · '+escHtml(p.websiteUrl):''}</div></div>
+                    <div class="proj-actions">
+                        <button class="btn btn-outline btn-xs btn-proj-edit" data-id="${p.id}">✏️</button>
+                        <button class="btn btn-danger-ghost btn-xs btn-proj-del" data-id="${p.id}">🗑️</button></div></div>`;
+            }).join('') || '<div style="text-align:center;color:var(--text-muted);padding:1.5rem">还没有任何考证项目</div>';
+            dom.projManageList.querySelectorAll('.btn-proj-edit').forEach(b => b.addEventListener('click', () => fillProjForm(b.dataset.id)));
+            dom.projManageList.querySelectorAll('.btn-proj-del').forEach(b => {
+                b.addEventListener('click', () => {
+                    const p = store.projects.find(x => x.id === b.dataset.id);
+                    if (!p) return;
+                    showConfirm('删除项目', '确定删除「' + p.name + '」及其全部 ' + (p.questions||[]).length + ' 道题目和 ' + (p.videos||[]).length + ' 个视频？', () => deleteProject(b.dataset.id));
+                });
+            });
+            if (editProjId) fillProjForm(editProjId); else resetProjForm();
+            dom.projModalOverlay.classList.add('active'); document.body.style.overflow = 'hidden';
+        }
+        function closeProjModal(){ dom.projModalOverlay.classList.remove('active'); document.body.style.overflow = ''; resetProjForm(); renderAll(); }
+        function resetProjForm(){ dom.projForm.reset(); dom.projFormId.value = ''; dom.projFormTitle.textContent = '➕ 新建考证项目'; }
+        function fillProjForm(projId){
+            const p = loadStore().projects.find(x => x.id === projId);
+            if (!p) return;
+            dom.projFormId.value = p.id; dom.projFormName.value = p.name || ''; dom.projFormWebsiteName.value = p.websiteName || '';
+            dom.projFormWebsiteUrl.value = p.websiteUrl || ''; dom.projFormTitle.textContent = '✏️ 编辑「' + p.name + '」'; dom.projFormName.focus();
+        }
+        function deleteProject(projId){
+            const store = loadStore();
+            store.projects = store.projects.filter(p => p.id !== projId);
+            if (store.activeProjectId === projId) store.activeProjectId = store.projects.length > 0 ? store.projects[0].id : null;
+            saveStore(store); closeProjModal(); showToast('🗑️ 项目已删除', 'success'); renderAll();
+        }
+        dom.projForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            if (!dom.projForm.checkValidity()) { dom.projForm.reportValidity(); return; }
+            const store = loadStore();
+            const eid = dom.projFormId.value.trim();
+            const data = { name: dom.projFormName.value.trim(), websiteName: dom.projFormWebsiteName.value.trim(), websiteUrl: dom.projFormWebsiteUrl.value.trim() };
+            if (eid) {
+                const p = store.projects.find(x => x.id === eid);
+                if (!p) { showToast('项目不存在', 'error'); return; }
+                Object.assign(p, data); saveStore(store); showToast('✅ 项目已更新', 'success');
+            } else {
+                const usedColors = new Set(store.projects.map(p => p.color));
+                const color = PROJ_COLORS.find(c => !usedColors.has(c)) || PROJ_COLORS[store.projects.length % PROJ_COLORS.length];
+                const project = { id: 'proj_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6), ...data, color, createdAt: new Date().toISOString(), questions: [], videos: [] };
+                store.projects.push(project); store.activeProjectId = project.id; saveStore(store);
+                showToast('✅ 项目已创建：' + project.name, 'success');
+            }
+            resetProjForm(); renderProjectSelector(); openProjManageModal(null);
+        });
+        $('#btnNewProject').addEventListener('click', e => { e.stopPropagation(); dom.projectDropdown.classList.remove('show'); dom.btnProject.classList.remove('open'); openProjManageModal(null); });
+        $('#btnManageProjects').addEventListener('click', e => { e.stopPropagation(); dom.projectDropdown.classList.remove('show'); dom.btnProject.classList.remove('open'); openProjManageModal(null); });
+        $('#btnProjModalClose').addEventListener('click', closeProjModal);
+        $('#btnProjFormCancel').addEventListener('click', resetProjForm);
+        dom.projModalOverlay.addEventListener('click', e => { if (e.target === dom.projModalOverlay) closeProjModal(); });
+
+        // ======================== 题目选项管理 ========================
+        function renderOptionsInForm(options){
+            dom.optionsContainer.innerHTML = '';
+            const opts = options && options.length ? options : ['', '', '', ''];
+            opts.forEach((text, i) => {
+                const row = document.createElement('div'); row.className = 'option-row';
+                row.innerHTML = `<span class="opt-label">${LETTERS[i]}</span><input type="text" class="opt-input" value="${escAttr(text)}" placeholder="选项 ${LETTERS[i]} 的内容…"><button type="button" class="btn-remove-opt" title="移除">✕</button>`;
+                row.querySelector('.btn-remove-opt').addEventListener('click', () => {
+                    if (dom.optionsContainer.children.length <= 2) { showToast('至少保留 2 个选项', 'error'); return; }
+                    row.remove(); refreshOptionLabels();
+                });
+                dom.optionsContainer.appendChild(row);
+            });
+        }
+        function getOptionsFromForm(){ return Array.from(dom.optionsContainer.querySelectorAll('.opt-input')).map(el => el.value.trim()); }
+        function refreshOptionLabels(){ Array.from(dom.optionsContainer.querySelectorAll('.opt-label')).forEach((lbl, i) => { lbl.textContent = LETTERS[i]; }); }
+        dom.btnAddOption.addEventListener('click', () => {
+            const idx = dom.optionsContainer.children.length;
+            const row = document.createElement('div'); row.className = 'option-row';
+            row.innerHTML = `<span class="opt-label">${LETTERS[idx]}</span><input type="text" class="opt-input" placeholder="选项 ${LETTERS[idx]} 的内容…"><button type="button" class="btn-remove-opt" title="移除">✕</button>`;
+            row.querySelector('.btn-remove-opt').addEventListener('click', () => { if (dom.optionsContainer.children.length <= 2) { showToast('至少保留 2 个选项', 'error'); return; } row.remove(); refreshOptionLabels(); });
+            dom.optionsContainer.appendChild(row);
+        });
+        dom.formType.addEventListener('change', () => {
+            dom.optionsSection.style.display = dom.formType.value === 'judge' ? 'none' : '';
+            dom.formAnswer.placeholder = dom.formType.value === 'judge' ? '✓ 或 ✗' : dom.formType.value === 'single' ? '如：A' : '如：ABD';
+        });
+
+        // ======================== 快捷粘贴解析 ========================
+        $('#btnQuickPaste').addEventListener('click', () => { dom.quickPasteArea.classList.toggle('show'); if (dom.quickPasteArea.classList.contains('show')) setTimeout(() => dom.pasteArea.focus(), 150); });
+        $('#btnParse').addEventListener('click', () => { const raw = dom.pasteArea.value.trim(); if (!raw) { showToast('请先粘贴题目内容', 'error'); return; } parseQuestion(raw); });
+        function parseQuestion(raw){
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            let questionText = '', answer = '', explanation = ''; const options = [];
+            for (const line of lines) {
+                const om = line.match(/^([A-J])[.、．)\s]+(.+)/), am = line.match(/^(正确答案|答案)[：:]\s*(.+)/i), em = line.match(/^(解析|解释|说明)[：:]\s*(.+)/i);
+                if (am) answer = am[2].trim();
+                else if (em) explanation = em[2].trim();
+                else if (om) options.push(om[2].trim());
+                else if (!questionText) questionText = line.replace(/^\d+[.、．)\s]+/, '').trim();
+                else if (questionText && options.length === 0 && !answer) {
+                    const ios = line.match(/([A-J])[.、．)\s]+([^A-J]+)/g);
+                    if (ios) ios.forEach(o => { const m = o.match(/([A-J])[.、．)\s]+(.+)/); if (m) options.push(m[2].trim()); });
+                }
+            }
+            if (questionText) dom.formQuestion.value = questionText;
+            if (options.length > 0) { if (answer.length > 1 && /^[A-J]+$/i.test(answer)) dom.formType.value = 'multiple'; dom.optionsSection.style.display = ''; renderOptionsInForm(options); }
+            if (answer) {
+                const u = answer.toUpperCase().trim();
+                if (['对','正确','✓','√','TRUE','T','YES'].includes(u)) { if (dom.formType.value==='single'||dom.formType.value==='multiple') dom.formAnswer.value=answer; else { dom.formType.value='judge'; dom.formAnswer.value='✓'; } }
+                else if (['错','错误','✗','×','FALSE','F','NO'].includes(u)) { if (dom.formType.value==='single'||dom.formType.value==='multiple') dom.formAnswer.value=answer; else { dom.formType.value='judge'; dom.formAnswer.value='✗'; } }
+                else dom.formAnswer.value = answer;
+            }
+            if (explanation) dom.formExplanation.value = explanation;
+            if (!answer && options.length === 0 && /[✓✗对错√×]/.test(raw)) { dom.formType.value = 'judge'; dom.optionsSection.style.display = 'none'; }
+            dom.formType.dispatchEvent(new Event('change')); showToast('✅ 解析完成，请核对并修正后保存', 'success');
+        }
+
+        // ======================== 题目弹窗 ========================
+        function openModal(title, btnText){ dom.modalTitle.textContent = title; dom.questionForm.querySelector('[type="submit"]').textContent = btnText; dom.modalOverlay.classList.add('active'); document.body.style.overflow = 'hidden'; setTimeout(() => dom.formQuestion.focus(), 150); }
+        function closeModal(){ dom.modalOverlay.classList.remove('active'); document.body.style.overflow = ''; resetForm(); }
+        function resetForm(){ dom.questionForm.reset(); dom.formId.value = ''; editingId = null; dom.formType.value = 'single'; dom.formWrongCount.value = '0'; dom.optionsSection.style.display = ''; dom.formAnswer.placeholder = '如：A'; dom.quickPasteArea.classList.remove('show'); dom.pasteArea.value = ''; renderOptionsInForm(['', '', '', '']); }
+        function openAddModal(){
+            const p = getActiveProject(); if (!p) { showToast('请先创建一个考证项目', 'error'); openProjManageModal(null); return; }
+            resetForm(); openModal('➕ 添加新题目', '💾 保存');
+        }
+        function openEditModal(id){
+            const q = (getActiveProject()||{}).questions?.find(r => r.id === id);
+            if (!q) { showToast('题目不存在', 'error'); return; }
+            resetForm(); editingId = id; dom.formId.value = q.id; dom.formType.value = q.type; dom.formWrongCount.value = q.wrongCount || 0;
+            dom.formQuestion.value = q.question || ''; dom.formAnswer.value = q.correctAnswer || ''; dom.formExplanation.value = q.explanation || '';
+            dom.formTags.value = (q.tags || []).join('，'); dom.optionsSection.style.display = q.type === 'judge' ? 'none' : '';
+            dom.formAnswer.placeholder = q.type === 'multiple' ? '如：ABD' : q.type === 'single' ? '如：A' : '✓ 或 ✗';
+            renderOptionsInForm(q.options || ['', '', '', '']); openModal('✏️ 编辑题目', '💾 更新');
+        }
+        dom.questionForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            if (!dom.questionForm.checkValidity()) { dom.questionForm.reportValidity(); return; }
+            const type = dom.formType.value, question = dom.formQuestion.value.trim();
+            const options = type === 'judge' ? [] : getOptionsFromForm();
+            const correctAnswer = dom.formAnswer.value.trim(), wrongCount = parseInt(dom.formWrongCount.value) || 0;
+            const explanation = dom.formExplanation.value.trim();
+            const tags = dom.formTags.value.trim() ? dom.formTags.value.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [];
+            const record = { type, question, options, correctAnswer, wrongCount, explanation, tags };
+            if (editingId) {
+                updateActiveProject(proj => {
+                    const idx = proj.questions.findIndex(r => r.id === editingId);
+                    if (idx === -1) { showToast('题目不存在', 'error'); return; }
+                    proj.questions[idx] = { ...proj.questions[idx], ...record, id: editingId };
+                }); showToast('✅ 题目已更新', 'success');
+            } else {
+                record.id = generateId(); record.createdAt = new Date().toISOString();
+                updateActiveProject(proj => { proj.questions.unshift(record); });
+                showToast('✅ 题目已添加', 'success');
+            }
+            closeModal(); renderAll();
+        });
+
+        // ======================== 通用确认框 ========================
+        function showConfirm(title, text, cb){ dom.confirmTitle.textContent = title; dom.confirmText.textContent = text; confirmCallback = cb; dom.confirmOverlay.classList.add('active'); }
+        function closeConfirm(){ dom.confirmOverlay.classList.remove('active'); confirmCallback = null; }
+        dom.btnConfirmCancel.addEventListener('click', closeConfirm);
+        dom.btnConfirmOk.addEventListener('click', () => { if (confirmCallback) confirmCallback(); closeConfirm(); });
+        dom.confirmOverlay.addEventListener('click', e => { if (e.target === dom.confirmOverlay) closeConfirm(); });
+
+        // ======================== 题目操作（同时刷新题库+错题库） ========================
+        function incrementWrong(id){ updateActiveProject(proj => { const q = proj.questions.find(r => r.id === id); if (q) q.wrongCount = (q.wrongCount||0)+1; }); renderBank(); renderWrong(); renderAll(); showToast('❌ 已加入错题库', 'error'); }
+        function resetWrong(id){ updateActiveProject(proj => { const q = proj.questions.find(r => r.id === id); if (q) q.wrongCount = 0; }); renderBank(); renderWrong(); renderAll(); showToast('✅ 已标记为掌握', 'success'); }
+        function deleteQuestion(id){ updateActiveProject(proj => { proj.questions = proj.questions.filter(r => r.id !== id); }); renderBank(); renderWrong(); renderAll(); showToast('🗑️ 已删除', 'success'); }
+
+        // ======================== 渲染题库（全部题目 + 答案速查表） ========================
+        function getFilteredBank(){
+            const questions = (getActiveProject()||{}).questions || [];
+            const keyword = dom.searchBank.value.trim().toLowerCase();
+            let result = questions;
+            if (currentBankFilter !== 'all') result = result.filter(r => r.type === currentBankFilter);
+            if (keyword) result = result.filter(r => r.question.toLowerCase().includes(keyword) || r.correctAnswer.toLowerCase().includes(keyword) || (r.explanation&&r.explanation.toLowerCase().includes(keyword)) || (r.tags&&r.tags.some(t=>t.toLowerCase().includes(keyword))) || (r.options&&r.options.some(o=>o.toLowerCase().includes(keyword))));
+            return result;
+        }
+        function renderBank(){
+            const active = getActiveProject();
+            const questions = active ? active.questions : [];
+            const filtered = getFilteredBank();
+            const keyword = dom.searchBank.value.trim().toLowerCase();
+            const typeLabel = { single:'单选', multiple:'多选', judge:'判断' };
+
+            dom.statTotal.textContent = '📚 ' + questions.length + ' 题';
+            dom.statWrong.textContent = '❌ 错题 ' + questions.filter(r=>(r.wrongCount||0)>0).length;
+            dom.statMastered.textContent = '✅ 掌握 ' + questions.filter(r=>(r.wrongCount||0)===0).length;
+            dom.tabBadgeBank.textContent = questions.length;
+            dom.bankResultCount.textContent = keyword ? '🔍 找到 ' + filtered.length + ' 道' : '';
+
+            const cbt = t => questions.filter(r => r.type === t).length;
+            dom.bankCountAll.textContent = '(' + questions.length + ')';
+            dom.bankCountSingle.textContent = '(' + cbt('single') + ')';
+            dom.bankCountMultiple.textContent = '(' + cbt('multiple') + ')';
+            dom.bankCountJudge.textContent = '(' + cbt('judge') + ')';
+
+            const store = loadStore();
+            if (store.projects.length === 0) {
+                dom.bankList.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><h3>欢迎使用错题助手</h3><p>支持多个考证平台 | 题库 + 错题 + 视频</p><p style="margin-top:1rem"><button class="btn btn-primary" id="btnCreateFirst">➕ 创建第一个考证项目</button></p></div>`;
+                const b = document.getElementById('btnCreateFirst'); if (b) b.addEventListener('click', () => openProjManageModal(null));
+                return;
+            }
+            if (!active) { dom.bankList.innerHTML = `<div class="empty-state"><div class="empty-icon">👆</div><h3>请选择一个考证项目</h3></div>`; return; }
+            if (filtered.length === 0) {
+                dom.bankList.innerHTML = questions.length === 0
+                    ? `<div class="empty-state"><div class="empty-icon">📭</div><h3>「${escHtml(active.name)}」题库为空</h3><p>在上方粘贴考试网页内容一键导入，或点击 ＋ 手动添加</p></div>`
+                    : `<div class="empty-state"><div class="empty-icon">🔍</div><h3>没有匹配的题目</h3></div>`;
+                return;
+            }
+
+            // 答案速查表（始终显示）
+            dom.bankList.innerHTML = `<div style="overflow-x:auto;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-sm)">
+            <table class="cheat-table">
+                <thead><tr><th style="width:50%">📝 题目</th><th style="width:8%">类型</th><th style="width:12%">✅ 答案</th><th style="width:8%">错误</th><th style="width:22%">操作</th></tr></thead>
+                <tbody>${filtered.map(q => {
+                    const tl = typeLabel[q.type]||q.type, wc0 = q.wrongCount||0;
+                    return `<tr class="${wc0>0?'wrong-row':''}" data-id="${q.id}">
+                        <td><div class="cheat-q">${highlightMatch(q.question, keyword)}</div></td>
+                        <td><span class="cheat-type">${tl}</span></td>
+                        <td><span class="cheat-a">${escHtml(q.correctAnswer)}</span></td>
+                        <td><span class="cheat-wrong">${wc0>0?'✗'+wc0:'✓'}</span></td>
+                        <td style="white-space:nowrap">
+                            <button class="btn btn-danger-ghost btn-sm btn-wrong-inc-bank" data-id="${q.id}" title="加入错题">❌</button>
+                            <button class="btn btn-ghost btn-sm btn-reset-bank" data-id="${q.id}" title="标记掌握" ${wc0===0?'disabled':''}>✅</button>
+                            <button class="btn btn-ghost btn-sm btn-edit-bank" data-id="${q.id}" title="编辑">✏️</button>
+                            <button class="btn btn-danger-ghost btn-sm btn-del-bank" data-id="${q.id}" title="删除">🗑️</button>
+                        </td></tr>`;
+                }).join('')}</tbody></table></div>`;
+
+            dom.bankList.querySelectorAll('.btn-wrong-inc-bank').forEach(b => b.addEventListener('click', () => incrementWrong(b.dataset.id)));
+            dom.bankList.querySelectorAll('.btn-reset-bank').forEach(b => b.addEventListener('click', () => resetWrong(b.dataset.id)));
+            dom.bankList.querySelectorAll('.btn-edit-bank').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.id)));
+            dom.bankList.querySelectorAll('.btn-del-bank').forEach(b => b.addEventListener('click', () => {
+                const q = questions.find(r => r.id === b.dataset.id);
+                showConfirm('删除题目', '确定删除「' + (q?q.question.slice(0,40):'') + '…」？', () => deleteQuestion(b.dataset.id));
+            }));
+        }
+
+        // ======================== 渲染错题库（仅错题 + 卡片详情） ========================
+        function getFilteredWrong(){
+            const questions = ((getActiveProject()||{}).questions || []).filter(r => (r.wrongCount||0) > 0);
+            const keyword = dom.searchWrong.value.trim().toLowerCase();
+            let result = questions;
+            if (currentWrongFilter !== 'all') result = result.filter(r => r.type === currentWrongFilter);
+            if (keyword) result = result.filter(r => r.question.toLowerCase().includes(keyword) || r.correctAnswer.toLowerCase().includes(keyword) || (r.explanation&&r.explanation.toLowerCase().includes(keyword)) || (r.options&&r.options.some(o=>o.toLowerCase().includes(keyword))));
+            return result;
+        }
+        function renderWrong(){
+            const active = getActiveProject();
+            const allQuestions = active ? active.questions : [];
+            const wrongQuestions = allQuestions.filter(r => (r.wrongCount||0) > 0);
+            const filtered = getFilteredWrong();
+            const keyword = dom.searchWrong.value.trim().toLowerCase();
+
+            dom.tabBadgeWrong.textContent = wrongQuestions.length;
+            dom.wrongResultCount.textContent = keyword ? '🔍 找到 ' + filtered.length + ' 道' : '';
+
+            const cbt = t => wrongQuestions.filter(r => r.type === t).length;
+            dom.wrongCountAll.textContent = '(' + wrongQuestions.length + ')';
+            dom.wrongCountSingle.textContent = '(' + cbt('single') + ')';
+            dom.wrongCountMultiple.textContent = '(' + cbt('multiple') + ')';
+            dom.wrongCountJudge.textContent = '(' + cbt('judge') + ')';
+
+            if (wrongQuestions.length === 0) {
+                dom.wrongList.innerHTML = `<div class="empty-state"><div class="empty-icon">🎉</div><h3>没有错题</h3><p>去题库做错的题目会自动出现在这里</p></div>`;
+                return;
+            }
+            if (filtered.length === 0) {
+                dom.wrongList.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>没有匹配的错题</h3></div>`;
+                return;
+            }
+
+            dom.wrongList.innerHTML = filtered.map(q => {
+                const tl = { single:'单选', multiple:'多选', judge:'判断' }[q.type]||q.type;
+                const wc0 = q.wrongCount||0, wcCls = wc0<=2?'one':'many', wcText = '✗ 错'+wc0+'次';
+                let oh = '';
+                if (q.options && q.options.length > 0) oh = '<div class="q-options">' + q.options.map((o,i) => '<span style="'+(q.correctAnswer.toUpperCase().includes(LETTERS[i])?'color:#059669;font-weight:700':'')+'">'+LETTERS[i]+'. '+highlightMatch(o,keyword)+'</span>').join('<br>') + '</div>';
+                const th = (q.tags&&q.tags.length>0) ? '<div class="q-tags">'+q.tags.map(t=>'<span class="q-tag">'+escHtml(t)+'</span>').join('')+'</div>' : '';
+                return `<article class="q-card" data-id="${q.id}"><div class="q-card-header"><span class="q-type-badge ${q.type}">${tl}</span><span class="q-wrong-count ${wcCls}">${wcText}</span>${th}</div>
+                <div class="q-question">${highlightMatch(q.question, keyword)}</div>${oh}
+                <div class="q-answer">✅ 正确答案：<strong>${escHtml(q.correctAnswer)}</strong></div>
+                ${q.explanation?'<div class="q-explanation">💡 '+highlightMatch(q.explanation,keyword)+'</div>':''}
+                <div class="q-card-actions">
+                    <button class="btn btn-outline btn-sm btn-edit-wrong" data-id="${q.id}">✏️ 编辑</button>
+                    <button class="btn btn-ghost btn-sm btn-wrong-inc-wrong" data-id="${q.id}">❌ 再做错</button>
+                    <button class="btn btn-ghost btn-sm btn-reset-wrong" data-id="${q.id}">✅ 掌握了</button>
+                    <button class="btn btn-danger-ghost btn-sm btn-del-wrong" data-id="${q.id}" style="margin-left:auto">🗑️</button></div></article>`;
+            }).join('');
+            dom.wrongList.querySelectorAll('.btn-edit-wrong').forEach(b => b.addEventListener('click', () => openEditModal(b.dataset.id)));
+            dom.wrongList.querySelectorAll('.btn-del-wrong').forEach(b => b.addEventListener('click', () => {
+                const q = allQuestions.find(r => r.id === b.dataset.id);
+                showConfirm('删除题目', '确定删除「' + (q?q.question.slice(0,40):'') + '…」？', () => deleteQuestion(b.dataset.id));
+            }));
+            dom.wrongList.querySelectorAll('.btn-wrong-inc-wrong').forEach(b => b.addEventListener('click', () => incrementWrong(b.dataset.id)));
+            dom.wrongList.querySelectorAll('.btn-reset-wrong').forEach(b => b.addEventListener('click', () => resetWrong(b.dataset.id)));
+        }
+
+        // ======================== 视频进度管理 ========================
+        function getVideos(){ return (getActiveProject()||{}).videos || []; }
+        function renderVideoList(){
+            const videos = getVideos();
+            const done = videos.filter(v => v.watched).length;
+            const pct = videos.length > 0 ? Math.round(done / videos.length * 100) : 0;
+            dom.videoProgressBar.style.width = pct + '%';
+            dom.videoProgressText.textContent = videos.length === 0 ? '还没有添加视频' : '已学习 ' + done + '/' + videos.length + ' 个视频（' + pct + '%）';
+            dom.tabBadgeV.textContent = done + '/' + videos.length;
+
+            if (videos.length === 0) {
+                dom.videoList.innerHTML = `<div class="empty-state"><div class="empty-icon">📺</div><h3>还没有添加课程视频</h3><p>添加课程视频来追踪学习进度<br>完成后即可知道什么时候能解锁考试</p></div>`;
+                return;
+            }
+            dom.videoList.innerHTML = videos.map((v, i) => {
+                const isWatched = v.watched;
+                const durText = v.duration ? ' · ⏱ ' + escHtml(v.duration) : '';
+                const noteText = v.note ? ' · 📝 ' + escHtml(v.note) : '';
+                const urlBadge = v.url ? ' 🔗 有视频' : '';
+                return `<div class="video-item${isWatched ? ' watched' : ''}" data-id="${v.id}">
+                    <div class="video-check${isWatched ? ' done' : ''}" data-id="${v.id}" title="${isWatched?'点击取消':'点击标记完成'}">${isWatched ? '✓' : ''}</div>
+                    <div class="video-info">
+                        <div class="video-title">${i+1}. ${escHtml(v.title)}${urlBadge}</div>
+                        <div class="video-meta">${v.watched ? '✅ 已观看 · '+(v.watchedAt?new Date(v.watchedAt).toLocaleString('zh-CN'):'') : '⬜ 未观看'}${durText}${noteText}</div>
+                    </div>
+                    <div class="video-actions">
+                        ${v.url ? '<button class="btn btn-outline btn-xs btn-video-play" data-id="'+v.id+'">▶ 播放</button>' : ''}
+                        <button class="btn btn-ghost btn-xs btn-video-edit" data-id="${v.id}">✏️</button>
+                        <button class="btn btn-danger-ghost btn-xs btn-video-del" data-id="${v.id}">🗑️</button>
+                    </div></div>`;
+            }).join('');
+
+            // 绑定事件
+            dom.videoList.querySelectorAll('.video-check').forEach(cb => {
+                cb.addEventListener('click', () => toggleVideoWatched(cb.dataset.id));
+            });
+            dom.videoList.querySelectorAll('.btn-video-play').forEach(b => {
+                b.addEventListener('click', () => openPlayer(b.dataset.id));
+            });
+            dom.videoList.querySelectorAll('.btn-video-edit').forEach(b => {
+                b.addEventListener('click', () => openVideoEditModal(b.dataset.id));
+            });
+            dom.videoList.querySelectorAll('.btn-video-del').forEach(b => {
+                b.addEventListener('click', () => {
+                    const v = videos.find(x => x.id === b.dataset.id);
+                    showConfirm('删除视频', '确定删除「' + (v?v.title:'') + '」？', () => deleteVideo(b.dataset.id));
+                });
+            });
+        }
+        function toggleVideoWatched(id){
+            updateActiveProject(proj => {
+                const v = proj.videos.find(x => x.id === id);
+                if (v) { v.watched = !v.watched; v.watchedAt = v.watched ? new Date().toISOString() : null; }
+            });
+            renderVideoList(); renderAll();
+            const v = getVideos().find(x => x.id === id);
+            if (v) showToast(v.watched ? '✅ 已标记为已观看' : '↩️ 已取消标记', 'success');
+        }
+        function deleteVideo(id){ updateActiveProject(proj => { proj.videos = proj.videos.filter(v => v.id !== id); }); renderVideoList(); renderAll(); showToast('🗑️ 视频已删除', 'success'); }
+
+        function openVideoAddModal(){
+            if (!getActiveProject()) { showToast('请先创建项目', 'error'); return; }
+            resetVideoForm(); dom.videoModalOverlay.classList.add('active'); document.body.style.overflow = 'hidden';
+            setTimeout(() => dom.videoFormTitle.focus(), 150);
+        }
+        function openVideoEditModal(id){
+            const v = getVideos().find(x => x.id === id);
+            if (!v) { showToast('视频不存在', 'error'); return; }
+            editingVideoId = id; dom.videoFormId.value = v.id; dom.videoFormTitle.value = v.title || '';
+            dom.videoFormUrl.value = v.url || ''; dom.videoFormDuration.value = v.duration || ''; dom.videoFormNote.value = v.note || '';
+            dom.videoModalTitle.textContent = '✏️ 编辑视频'; dom.videoForm.querySelector('[type="submit"]').textContent = '💾 更新';
+            dom.videoModalOverlay.classList.add('active'); document.body.style.overflow = 'hidden';
+            setTimeout(() => dom.videoFormTitle.focus(), 150);
+        }
+        function closeVideoModal(){ dom.videoModalOverlay.classList.remove('active'); document.body.style.overflow = ''; resetVideoForm(); }
+        function resetVideoForm(){ dom.videoForm.reset(); dom.videoFormId.value = ''; editingVideoId = null; dom.videoModalTitle.textContent = '➕ 添加课程视频'; dom.videoForm.querySelector('[type="submit"]').textContent = '💾 保存'; }
+        dom.videoForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            if (!dom.videoForm.checkValidity()) { dom.videoForm.reportValidity(); return; }
+            const data = { title: dom.videoFormTitle.value.trim(), url: dom.videoFormUrl.value.trim(), duration: dom.videoFormDuration.value.trim(), note: dom.videoFormNote.value.trim() };
+            if (editingVideoId) {
+                updateActiveProject(proj => {
+                    const v = proj.videos.find(x => x.id === editingVideoId);
+                    if (v) Object.assign(v, data);
+                }); showToast('✅ 视频已更新', 'success');
+            } else {
+                data.id = generateId('v'); data.watched = false; data.watchedAt = null; data.createdAt = new Date().toISOString();
+                updateActiveProject(proj => { proj.videos.push(data); });
+                showToast('✅ 视频已添加', 'success');
+            }
+            closeVideoModal(); renderVideoList(); renderAll();
+        });
+        $('#btnAddVideo').addEventListener('click', openVideoAddModal);
+        $('#btnVideoCancel').addEventListener('click', closeVideoModal);
+        dom.videoModalOverlay.addEventListener('click', e => { if (e.target === dom.videoModalOverlay) closeVideoModal(); });
+        $('#btnMarkAllWatched').addEventListener('click', () => {
+            updateActiveProject(proj => {
+                proj.videos.forEach(v => { v.watched = true; if (!v.watchedAt) v.watchedAt = new Date().toISOString(); });
+            });
+            renderVideoList(); renderAll(); showToast('⚡ 全部视频已标记为已观看', 'success');
+        });
+        $('#btnResetAllVideos').addEventListener('click', () => {
+            showConfirm('重置进度', '确定将所有视频标记为未观看吗？', () => {
+                updateActiveProject(proj => { proj.videos.forEach(v => { v.watched = false; v.watchedAt = null; }); });
+                renderVideoList(); renderAll(); showToast('↺ 视频进度已重置', 'success');
+            });
+        });
+
+        // 批量导入
+        $('#btnBatchImport').addEventListener('click', () => {
+            const area = $('#batchImportArea');
+            const isShowing = area.classList.contains('show');
+            if (isShowing) { area.classList.remove('show'); return; }
+            area.classList.add('show');
+            setTimeout(() => $('#batchVideoText').focus(), 150);
+        });
+        $('#btnBatchCancel').addEventListener('click', () => $('#batchImportArea').classList.remove('show'));
+        $('#btnBatchParse').addEventListener('click', () => {
+            const raw = $('#batchVideoText').value.trim();
+            if (!raw) { showToast('请粘贴视频列表', 'error'); return; }
+            const lines = raw.split('\n').filter(l => l.trim());
+            let added = 0;
+            updateActiveProject(proj => {
+                lines.forEach(line => {
+                    // 格式：标题 | URL | 时长  或  标题 | URL  或  只有标题
+                    const parts = line.split('|').map(p => p.trim());
+                    const title = parts[0];
+                    const url = parts[1] || '';
+                    const duration = parts[2] || '';
+                    if (!title) return;
+                    const v = { id: generateId('v'), title, url, duration, note: '', watched: false, watchedAt: null, createdAt: new Date().toISOString() };
+                    proj.videos.push(v);
+                    added++;
+                });
+                showToast('📋 成功导入 ' + added + ' 个视频', 'success');
+            });
+            $('#batchVideoText').value = '';
+            $('#batchImportArea').classList.remove('show');
+            renderVideoList(); renderAll();
+        });
+
+        // 自动播放全部：找到第一个未看且有URL的视频，打开播放器（自动连播模式）
+        $('#btnAutoPlayAll').addEventListener('click', () => {
+            const videos = getVideos();
+            const firstUnwatched = videos.find(v => !v.watched && v.url);
+            if (!firstUnwatched) {
+                showToast('没有可自动播放的视频（需要未观看且有URL）', 'error');
+                return;
+            }
+            // 确保自动连播是开启的
+            $('#autoPlayToggle').checked = true;
+            openPlayer(firstUnwatched.id);
+            // 自动开始播放
+            setTimeout(() => {
+                if (dom.playerVideo.src && dom.playerVideo.paused) {
+                    dom.playerVideo.play().catch(() => {});
+                }
+            }, 500);
+            showToast('▶ 开始自动播放，完成后自动跳转下一个', 'success');
+        });
+
+        // ======================== 视频播放器（支持自动连播） ========================
+        let autoPlayQueueActive = false; // 是否在自动连播中
+
+        function openPlayer(videoId, autoPlay){
+            const v = getVideos().find(x => x.id === videoId);
+            if (!v) { showToast('视频不存在', 'error'); return; }
+            currentPlayerVideoId = videoId;
+            dom.playerTitle.textContent = '🎬 ' + v.title;
+            dom.playerUrlInput.value = v.url || '';
+            if (v.url) loadVideoUrl(v.url);
+            else showNoVideo();
+            dom.playerOverlay.classList.add('active'); document.body.style.overflow = 'hidden';
+            resetSpeedButtons();
+            if (autoPlay !== false) {
+                setTimeout(() => {
+                    if (dom.playerVideo.src && dom.playerVideo.paused) {
+                        dom.playerVideo.play().catch(() => {});
+                    }
+                }, 400);
+            }
+        }
+        function closePlayer(){
+            dom.playerOverlay.classList.remove('active'); document.body.style.overflow = '';
+            if (dom.playerVideo.src && !dom.playerVideo.paused) dom.playerVideo.pause();
+            dom.playerVideo.src = ''; dom.playerVideo.load();
+            currentPlayerVideoId = null; autoPlayQueueActive = false;
+        }
+        function loadVideoUrl(url){
+            if (!url) { showNoVideo(); return; }
+            dom.playerVideo.style.display = 'block';
+            dom.playerNoVideo.style.display = 'none';
+            dom.playerVideo.src = url;
+            dom.playerVideo.load();
+            dom.playerUrlInput.value = url;
+        }
+        function showNoVideo(){
+            dom.playerVideo.style.display = 'none';
+            dom.playerNoVideo.style.display = 'flex';
+            dom.playerVideo.src = '';
+        }
+        function resetSpeedButtons(){
+            dom.speedGroup.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = dom.speedGroup.querySelector('[data-rate="1"]');
+            if (activeBtn) activeBtn.classList.add('active');
+            dom.playerVideo.playbackRate = 1;
+        }
+
+        // 标记当前视频为已完成
+        function markCurrentWatched(){
+            if (!currentPlayerVideoId) return;
+            updateActiveProject(proj => {
+                const v = proj.videos.find(x => x.id === currentPlayerVideoId);
+                if (v) { v.watched = true; v.watchedAt = new Date().toISOString(); }
+            });
+            renderVideoList(); renderAll();
+        }
+
+        // 播放下一个未看视频（有URL的）
+        function playNextVideo(){
+            const videos = getVideos();
+            const next = videos.find(v => !v.watched && v.url && v.id !== currentPlayerVideoId);
+            if (!next) {
+                showToast('🎉 所有视频已播放完毕！可以去考试了', 'success');
+                closePlayer();
+                return;
+            }
+            showToast('▶ 自动播放下一个：' + next.title, 'success');
+            currentPlayerVideoId = next.id;
+            dom.playerTitle.textContent = '🎬 ' + next.title;
+            dom.playerUrlInput.value = next.url || '';
+            loadVideoUrl(next.url);
+            // 保持倍速
+            setTimeout(() => {
+                if (dom.playerVideo.src && dom.playerVideo.paused) {
+                    dom.playerVideo.play().catch(() => {});
+                }
+            }, 400);
+        }
+
+        // 视频播放结束事件 —— 自动连播核心
+        dom.playerVideo.addEventListener('ended', () => {
+            const autoPlayOn = $('#autoPlayToggle').checked;
+            if (!autoPlayOn || !currentPlayerVideoId) return;
+            // 标记当前为已完成
+            markCurrentWatched();
+            // 播放下一个
+            setTimeout(() => playNextVideo(), 600);
+        });
+
+        // 倍速按钮
+        dom.speedGroup.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                dom.speedGroup.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const rate = parseFloat(btn.dataset.rate);
+                dom.playerVideo.playbackRate = rate;
+            });
+        });
+        // 加载 URL
+        $('#btnPlayerLoadUrl').addEventListener('click', () => {
+            const url = dom.playerUrlInput.value.trim();
+            if (!url) { showToast('请输入视频URL', 'error'); return; }
+            loadVideoUrl(url);
+            if (currentPlayerVideoId) {
+                updateActiveProject(proj => { const v = proj.videos.find(x => x.id === currentPlayerVideoId); if (v) v.url = url; });
+                renderVideoList();
+            }
+        });
+        // 手动标记完成 + 自动跳下一个
+        $('#btnPlayerMarkDone').addEventListener('click', () => {
+            markCurrentWatched();
+            const autoPlayOn = $('#autoPlayToggle').checked;
+            if (autoPlayOn) {
+                showToast('✅ 已完成，自动跳转下一个…', 'success');
+                setTimeout(() => playNextVideo(), 300);
+            } else {
+                showToast('✅ 已完成', 'success');
+                closePlayer();
+            }
+        });
+        $('#btnPlayerClose').addEventListener('click', closePlayer);
+        dom.playerOverlay.addEventListener('click', e => { if (e.target === dom.playerOverlay) closePlayer(); });
+        // 快捷键：空格暂停/播放
+        document.addEventListener('keydown', function(e){
+            if (!dom.playerOverlay.classList.contains('active')) return;
+            if (e.key === ' ' && document.activeElement !== dom.playerUrlInput) {
+                e.preventDefault();
+                const v = dom.playerVideo;
+                if (v.src && !v.src.endsWith('/')) {
+                    if (v.paused) v.play().catch(()=>{}); else v.pause();
+                }
+            }
+        });
+        // 粘贴视频 URL 到播放器
+        dom.playerUrlInput.addEventListener('paste', () => {
+            setTimeout(() => {
+                const url = dom.playerUrlInput.value.trim();
+                if (url && (url.startsWith('http') || url.startsWith('blob:') || url.endsWith('.mp4') || url.endsWith('.m3u8') || url.endsWith('.webm'))) {
+                    loadVideoUrl(url);
+                }
+            }, 100);
+        });
+
+        // ======================== 总渲染 ========================
+        function renderAll(){
+            renderProjectSelector();
+            const store = loadStore();
+            const active = getActiveProject();
+            // 更新统计
+            if (active) {
+                const qs = active.questions || [];
+                const wc = qs.filter(r => (r.wrongCount||0) > 0).length;
+                dom.statTotal.textContent = '📚 ' + qs.length + ' 题';
+                dom.statWrong.textContent = '❌ 错题 ' + wc;
+                dom.statMastered.textContent = '✅ 掌握 ' + (qs.length - wc);
+            }
+            // 渲染当前 tab
+            if (currentTab === 'bank') renderBank();
+            else if (currentTab === 'wrong') renderWrong();
+            else if (currentTab === 'videos') { renderVideoList(); }
+            // 更新 badges
+            const videos = getVideos();
+            dom.tabBadgeV.textContent = videos.filter(v=>v.watched).length + '/' + videos.length;
+            const wrongCount = active ? (active.questions||[]).filter(r=>(r.wrongCount||0)>0).length : 0;
+            dom.tabBadgeWrong.textContent = wrongCount;
+        }
+
+        // ======================== 题库搜索 & 筛选 ========================
+        dom.searchBank.addEventListener('input', function(){ dom.btnBankClear.classList.toggle('visible', this.value.trim().length > 0); renderBank(); });
+        dom.btnBankClear.addEventListener('click', () => { dom.searchBank.value = ''; dom.btnBankClear.classList.remove('visible'); dom.searchBank.focus(); renderBank(); });
+        dom.bankFilters.forEach(tab => { tab.addEventListener('click', () => { dom.bankFilters.forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentBankFilter = tab.dataset.filter; renderBank(); }); });
+        // 错题库搜索 & 筛选
+        dom.searchWrong.addEventListener('input', function(){ dom.btnWrongClear.classList.toggle('visible', this.value.trim().length > 0); renderWrong(); });
+        dom.btnWrongClear.addEventListener('click', () => { dom.searchWrong.value = ''; dom.btnWrongClear.classList.remove('visible'); dom.searchWrong.focus(); renderWrong(); });
+        dom.wrongFilters.forEach(tab => { tab.addEventListener('click', () => { dom.wrongFilters.forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentWrongFilter = tab.dataset.filter; renderWrong(); }); });
+
+        // ======================== 网页导入题库 ========================
+        // 三个导入方式的切换
+        function showImportPanel(panelId){
+            ['consoleGuide','manualPasteArea','urlPasteArea'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('show', id === panelId);
+            });
+        }
+        $('#btnMethodConsole').addEventListener('click', () => showImportPanel('consoleGuide'));
+        $('#btnMethodCopy').addEventListener('click', () => {
+            showImportPanel('manualPasteArea');
+            setTimeout(() => dom.pageContent.focus(), 150);
+        });
+        $('#btnMethodUrl').addEventListener('click', () => {
+            showImportPanel('urlPasteArea');
+            setTimeout(() => dom.importUrl.focus(), 150);
+        });
+        // 复制脚本按钮
+        $('#btnCopyScript').addEventListener('click', () => {
+            const script = $('#consoleScript').value;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(script).then(() => showToast('✅ 脚本已复制！去考试页面按F12粘贴执行', 'success'));
+            } else {
+                $('#consoleScript').select();
+                showToast('请手动 Ctrl+C 复制脚本', 'success');
+            }
+        });
+        $('#btnCancelPaste').addEventListener('click', () => {
+            showImportPanel('');
+            dom.pageContent.value = '';
+        });
+        $('#btnFetchUrl').addEventListener('click', async () => {
+            const url = dom.importUrl.value.trim();
+            if (!url) { showToast('请先粘贴考试网站URL', 'error'); return; }
+            showToast('⏳ 正在尝试获取…', 'success');
+            try {
+                await fetch(url, { mode: 'no-cors' });
+                showToast('⚠️ 网站需登录，请用「浏览器提取」或「手动复制粘贴」', 'error');
+                showImportPanel('consoleGuide');
+            } catch(e) {
+                showToast('⚠️ 网络错误，请用「浏览器提取」方式', 'error');
+                showImportPanel('consoleGuide');
+            }
+        });
+        $('#btnParsePage').addEventListener('click', () => {
+            const raw = dom.pageContent.value.trim();
+            if (!raw) { showToast('请先粘贴考试页面内容', 'error'); return; }
+            const parsed = parsePageContent(raw);
+            if (parsed.length === 0) { showToast('❌ 未识别到题目，请检查格式', 'error'); return; }
+            updateActiveProject(proj => {
+                const existingQs = new Set(proj.questions.map(q => q.question));
+                let added = 0;
+                parsed.forEach(p => {
+                    // 去重：相同题目不重复添加
+                    if (existingQs.has(p.question)) return;
+                    p.id = generateId(); p.createdAt = new Date().toISOString();
+                    p.wrongCount = 0; p.tags = p.tags || [];
+                    proj.questions.unshift(p);
+                    existingQs.add(p.question);
+                    added++;
+                });
+                showToast('📥 成功导入 ' + added + ' 道题目（跳过 ' + (parsed.length - added) + ' 道重复）', 'success');
+            });
+            dom.pageContent.value = '';
+            showImportPanel('');
+            renderBank(); renderWrong(); renderAll();
+        });
+        function parsePageContent(raw){
+            const questions = [];
+            // 先按题号分割
+            const blocks = raw.split(/\n(?=\d+[.、．)\s]+)/);
+            // 也尝试按"正确答案"分割
+            const allLines = raw.split('\n');
+
+            // 策略：找出所有"数字. 题目"模式的块
+            const questionStarts = [];
+            allLines.forEach((line, i) => {
+                if (/^\d+[.、．)\s]+/.test(line.trim()) && line.trim().length > 5) {
+                    questionStarts.push(i);
+                }
+            });
+
+            if (questionStarts.length === 0 && blocks.length <= 1) {
+                // 尝试整段解析
+                return parseBlockAsQuestions(raw);
+            }
+
+            // 按题号分块处理
+            const chunks = [];
+            for (let i = 0; i < questionStarts.length; i++) {
+                const start = questionStarts[i];
+                const end = i + 1 < questionStarts.length ? questionStarts[i + 1] : allLines.length;
+                chunks.push(allLines.slice(start, end).join('\n'));
+            }
+            if (chunks.length === 0 && blocks.length > 1) chunks.push(...blocks);
+
+            chunks.forEach(chunk => {
+                const q = parseSingleQuestion(chunk);
+                if (q && q.question) questions.push(q);
+            });
+
+            return questions;
+        }
+        function parseBlockAsQuestions(raw){
+            // 尝试整段解析，找所有 "数字. 题目" 和对应的 "正确答案"
+            const results = [];
+            const lines = raw.split('\n');
+            let currentQ = null, currentOptions = [];
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                const qMatch = trimmed.match(/^(\d+)[.、．)\s]+(.+)/);
+                const optMatch = trimmed.match(/^([A-J])[.、．)\s]+(.+)/);
+                const ansMatch = trimmed.match(/^(?:正确答案|答案)[：:]\s*(.+)/i);
+
+                if (qMatch && qMatch[2].length > 5) {
+                    if (currentQ) {
+                        currentQ.options = currentOptions;
+                        results.push(currentQ);
+                    }
+                    currentQ = { question: qMatch[2].trim(), type: 'single', correctAnswer: '', options: [], explanation: '' };
+                    currentOptions = [];
+                } else if (optMatch && currentQ) {
+                    currentOptions.push(optMatch[2].trim());
+                } else if (ansMatch && currentQ) {
+                    currentQ.correctAnswer = ansMatch[1].trim().toUpperCase();
+                } else if (trimmed.startsWith('解析') || trimmed.startsWith('解释')) {
+                    if (currentQ) currentQ.explanation = trimmed.replace(/^(?:解析|解释)[：:]\s*/, '');
+                }
+            }
+            if (currentQ) { currentQ.options = currentOptions; results.push(currentQ); }
+
+            return results.filter(q => q.question && q.correctAnswer).map(q => {
+                if (q.correctAnswer === '对' || q.correctAnswer === '正确' || q.correctAnswer === '✓' || q.correctAnswer === '√') { q.type = 'judge'; q.correctAnswer = '✓'; }
+                else if (q.correctAnswer === '错' || q.correctAnswer === '错误' || q.correctAnswer === '✗' || q.correctAnswer === '×') { q.type = 'judge'; q.correctAnswer = '✗'; }
+                else if (q.correctAnswer.length > 1 && /^[A-J]+$/i.test(q.correctAnswer)) q.type = 'multiple';
+                return q;
+            });
+        }
+        function parseSingleQuestion(chunk){
+            const lines = chunk.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length === 0) return null;
+
+            let question = '', answer = '', explanation = '';
+            const options = [];
+
+            for (const line of lines) {
+                const optMatch = line.match(/^([A-J])[.、．)\s]+(.+)/);
+                const ansMatch = line.match(/^(?:正确答案|答案)[：:]\s*(.+)/i);
+                const expMatch = line.match(/^(?:解析|解释|说明)[：:]\s*(.+)/i);
+
+                if (ansMatch) answer = ansMatch[1].trim();
+                else if (expMatch) explanation = expMatch[1].trim();
+                else if (optMatch) options.push(optMatch[2].trim());
+                else if (!question && /^\d+[.、．)\s]+/.test(line)) {
+                    question = line.replace(/^\d+[.、．)\s]+/, '').trim();
+                } else if (!question) {
+                    question = line;
+                }
+            }
+
+            if (!question) return null;
+
+            let type = 'single';
+            if (answer) {
+                const upper = answer.toUpperCase();
+                if (['对','正确','✓','√','TRUE','T','YES'].includes(upper)) { type = 'judge'; answer = '✓'; }
+                else if (['错','错误','✗','×','FALSE','F','NO'].includes(upper)) { type = 'judge'; answer = '✗'; }
+                else if (upper.length > 1 && /^[A-J]+$/i.test(upper)) type = 'multiple';
+            }
+
+            return { question, type, options, correctAnswer: answer, explanation, wrongCount: 0, tags: [] };
+        }
+
+        // ======================== 按钮事件 ========================
+        $('#btnAddTop').addEventListener('click', () => { if (currentTab === 'videos') openVideoAddModal(); else openAddModal(); });
+        $('#fabAdd').addEventListener('click', () => { if (currentTab === 'videos') openVideoAddModal(); else openAddModal(); });
+        $('#btnCancel').addEventListener('click', closeModal);
+        dom.modalOverlay.addEventListener('click', e => { if (e.target === dom.modalOverlay) closeModal(); });
+
+        $('#btnExport').addEventListener('click', () => {
+            const active = getActiveProject();
+            if (!active) { showToast('请先选择项目', 'error'); return; }
+            if (active.questions.length === 0 && active.videos.length === 0) { showToast('当前项目无内容可导出', 'error'); return; }
+            const exportData = { exportTime: new Date().toISOString(), version: 2, projectName: active.name, projectWebsiteName: active.websiteName, projectWebsiteUrl: active.websiteUrl, questionCount: active.questions.length, videoCount: active.videos.length, questions: active.questions, videos: active.videos };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type:'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = (active.name||'题库') + '_备份_' + new Date().toISOString().slice(0,10) + '.json';
+            a.click(); URL.revokeObjectURL(url);
+            showToast('📤 已导出（' + active.questions.length + '题 + ' + active.videos.length + '个视频）', 'success');
+        });
+        $('#btnImport').addEventListener('click', () => dom.fileImport.click());
+        dom.fileImport.addEventListener('change', () => {
+            const file = dom.fileImport.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e){
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const questions = data.questions || (Array.isArray(data) ? data : []);
+                    const videos = data.videos || [];
+                    if (!Array.isArray(questions)) throw new Error('格式错误');
+                    updateActiveProject(proj => {
+                        const existingIds = new Set(proj.questions.map(r => r.id));
+                        let aq = 0; questions.forEach(q => { if (!q.id || existingIds.has(q.id)) q.id = generateId(); q.createdAt = q.createdAt || new Date().toISOString(); proj.questions.unshift(q); existingIds.add(q.id); aq++; });
+                        const existingVids = new Set(proj.videos.map(v => v.id));
+                        let av = 0; videos.forEach(v => { if (!v.id || existingVids.has(v.id)) v.id = generateId('v'); v.createdAt = v.createdAt || new Date().toISOString(); proj.videos.push(v); existingVids.add(v.id); av++; });
+                        showToast('📥 导入 ' + aq + ' 题 + ' + av + ' 个视频到「' + proj.name + '」', 'success');
+                    });
+                    renderAll();
+                } catch(err){ showToast('❌ 文件格式错误', 'error'); }
+            };
+            reader.readAsText(file); dom.fileImport.value = '';
+        });
+
+        // ======================== 快捷键 ========================
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape') {
+                if (dom.playerOverlay.classList.contains('active')) closePlayer();
+                else if (dom.confirmOverlay.classList.contains('active')) closeConfirm();
+                else if (dom.videoModalOverlay.classList.contains('active')) closeVideoModal();
+                else if (dom.projModalOverlay.classList.contains('active')) closeProjModal();
+                else if (dom.modalOverlay.classList.contains('active')) closeModal();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                if (currentTab === 'bank') { dom.searchBank.focus(); dom.searchBank.select(); }
+                else if (currentTab === 'wrong') { dom.searchWrong.focus(); dom.searchWrong.select(); }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (dom.modalOverlay.classList.contains('active')) dom.questionForm.dispatchEvent(new Event('submit'));
+            }
+            if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const tag = document.activeElement && document.activeElement.tagName;
+                if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && !dom.projModalOverlay.classList.contains('active') && !dom.videoModalOverlay.classList.contains('active')) {
+                    e.preventDefault();
+                    if (currentTab === 'videos') openVideoAddModal();
+                    else openAddModal();
+                }
+            }
+            // Tab 数字键切换
+            if (e.key === '1' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const tag = document.activeElement && document.activeElement.tagName;
+                if (tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); switchTab('bank'); }
+            }
+            if (e.key === '2' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const tag = document.activeElement && document.activeElement.tagName;
+                if (tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); switchTab('wrong'); }
+            }
+            if (e.key === '3' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const tag = document.activeElement && document.activeElement.tagName;
+                if (tag !== 'INPUT' && tag !== 'TEXTAREA') { e.preventDefault(); switchTab('videos'); }
+            }
+        });
+
+        // ======================== Toast ========================
+        function showToast(msg, type){
+            const t = document.createElement('div'); t.className = 'toast ' + (type||''); t.textContent = msg;
+            dom.toastContainer.appendChild(t);
+            t.addEventListener('animationend', e => { if (e.animationName==='toastOut') t.remove(); });
+            setTimeout(() => { if (t.parentNode) t.remove(); }, 3000);
+        }
+        function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+        function escAttr(s){ return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+        // ======================== 初始化 ========================
+        function init(){
+            const store = loadStore();
+            if (store.projects.length === 0) {
+                store.projects.push({
+                    id: 'proj_demo_orange', name: '人工智能训练师（初级）',
+                    websiteName: '橙点同学', websiteUrl: 'https://www.orange-class.com/certificate/59',
+                    color: PROJ_COLORS[0], createdAt: new Date().toISOString(),
+                    questions: [
+                        { id:'demo_q1', type:'single', question:'以下关于人工智能训练师的说法，正确的是？', options:['只需要会写代码就能胜任','需要掌握数据标注、模型训练等综合技能','跟传统程序员的工作内容完全一样','不需要了解业务知识'], correctAnswer:'B', wrongCount:2, explanation:'人工智能训练师是综合性岗位，需要数据标注、模型训练、业务理解等多方面能力。', tags:['人工智能训练师','岗位认知'], createdAt:new Date().toISOString() },
+                        { id:'demo_q2', type:'judge', question:'数据标注的质量直接影响模型训练的效果。', options:[], correctAnswer:'✓', wrongCount:0, explanation:'数据标注是模型训练的基础，标注质量差会导致 garbage in, garbage out。', tags:['数据标注','基础概念'], createdAt:new Date().toISOString() },
+                        { id:'demo_q3', type:'multiple', question:'以下哪些属于机器学习的主要类型？', options:['监督学习','无监督学习','强化学习','被动学习'], correctAnswer:'ABC', wrongCount:1, explanation:'机器学习三大类型：监督学习、无监督学习、强化学习。', tags:['机器学习','分类'], createdAt:new Date().toISOString() },
+                    ],
+                    videos: [
+                        { id:'demo_v1', title:'第1章：人工智能概述', url:'', duration:'12分钟', note:'必看，介绍了AI基本概念', watched:true, watchedAt:new Date().toISOString(), createdAt:new Date().toISOString() },
+                        { id:'demo_v2', title:'第2章：机器学习基础', url:'', duration:'18分钟', note:'重点章节', watched:false, watchedAt:null, createdAt:new Date().toISOString() },
+                        { id:'demo_v3', title:'第3章：深度学习与神经网络', url:'', duration:'22分钟', note:'', watched:false, watchedAt:null, createdAt:new Date().toISOString() },
+                        { id:'demo_v4', title:'第4章：数据标注规范', url:'', duration:'15分钟', note:'实操部分', watched:false, watchedAt:null, createdAt:new Date().toISOString() },
+                        { id:'demo_v5', title:'第5章：模型训练与调优', url:'', duration:'25分钟', note:'最难的一章，建议多看', watched:false, watchedAt:null, createdAt:new Date().toISOString() },
+                    ],
+                });
+                store.activeProjectId = 'proj_demo_orange'; saveStore(store);
+            }
+            // 确保所有项目有 videos 数组
+            const st = loadStore();
+            let needsSave = false;
+            st.projects.forEach(p => { if (!p.videos) { p.videos = []; needsSave = true; } });
+            if (needsSave) saveStore(st);
+
+            renderAll();
+            setTimeout(() => dom.searchBank.focus(), 300);
+            console.log('📝 考证错题助手 v3 已就绪 | 题库 + 错题库 + 视频进度');
+            console.log('💡 Ctrl+K 搜索 | N 添加 | 1题库 2错题 3视频 | 粘贴网页内容一键导入');
+        }
+        init();
+    })();
+    </script>
+</body>
+</html>
