@@ -1,1631 +1,1484 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>赫兹 HZ — 地球online玩家</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>赫兹 HZ — Demo v2</title>
 
-    <!-- ==================== 1. Google Fonts & Font Awesome ==================== -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/tabler-icons.min.css">
 
-    <!-- ==================== 2. 全局样式 ==================== -->
-    <style>
-        /* ================================================================
-            CSS 变量 —— 日间 / 夜间双主题
-           ================================================================ */
-        :root {
-            --bg:        #f0f4f8;
-            --bg-card:   #ffffff;
-            --bg-hero:   #0b1120;
-            --text:      #1a1a2e;
-            --text-sub:  #64748b;
-            --heading:   #0f172a;
-            --primary:   #2563eb;
-            --primary-d: #1d4ed8;
-            --secondary: #10b981;
-            --secondary-d:#059669;
-            --accent:    #f59e0b;
-            --border:    #e2e8f0;
-            --pixel-shadow: #1a1a2e;
-            --nav-bg:    rgba(240,244,248,0.85);
-            --scanline-opacity: 0.03;
-            --card-hover: #f8fafc;
-            --tag-bg:    #e0f2fe;
-            --tag-text:  #0369a1;
-            --bar-bg:    #e2e8f0;
-            --footer-bg: #0b1120;
-            --footer-text:#94a3b8;
-        }
+<style>
+/* ============================================================
+   Variables
+   ============================================================ */
+:root {
+  --bg:        #08080a;
+  --bg-card:   rgba(18,18,26,0.55);
+  --bg-card-hover: rgba(18,18,26,0.75);
+  --bg-nav:    rgba(8,8,10,0.65);
+  --text:      #e2e8f0;
+  --text-dim:  #94a3b8;
+  --heading:   #f1f5f9;
+  --accent:    #10b981;
+  --accent-glow: rgba(16,185,129,0.10);
+  --border:    rgba(255,255,255,0.07);
+  --border-hover: rgba(16,185,129,0.30);
+  --radius:    2rem;
+  --radius-sm: calc(2rem - 0.375rem);
+  --ease:      cubic-bezier(0.32, 0.72, 0, 1);
+}
 
-        [data-theme="dark"] {
-            --bg:        #0a0a1a;
-            --bg-card:   #141428;
-            --bg-hero:   #040610;
-            --text:      #e2e8f0;
-            --text-sub:  #94a3b8;
-            --heading:   #f1f5f9;
-            --primary:   #60a5fa;
-            --primary-d: #3b82f6;
-            --secondary: #34d399;
-            --secondary-d:#10b981;
-            --accent:    #fbbf24;
-            --border:    #1e1e3a;
-            --pixel-shadow: #000;
-            --nav-bg:    rgba(10,10,26,0.9);
-            --scanline-opacity: 0.06;
-            --card-hover: #1a1a30;
-            --tag-bg:    #1e3a5f;
-            --tag-text:  #7dd3fc;
-            --bar-bg:    #1e1e3a;
-            --footer-bg: #040610;
-            --footer-text:#64748b;
-        }
+[data-theme="light"] {
+  --bg:        #f8f9fb;
+  --bg-card:   rgba(255,255,255,0.60);
+  --bg-card-hover: rgba(255,255,255,0.82);
+  --bg-nav:    rgba(248,249,251,0.65);
+  --text:      #1e293b;
+  --text-dim:  #94a3b8;
+  --heading:   #0f172a;
+  --accent:    #059669;
+  --accent-glow: rgba(5,150,105,0.06);
+  --border:    rgba(0,0,0,0.06);
+  --border-hover: rgba(5,150,105,0.22);
+}
 
-        /* ================================================================
-           基础重置
-           ================================================================ */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        html {
-            scroll-behavior: smooth;
-            scroll-padding-top: 80px;
-        }
+body {
+  font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.5s var(--ease), color 0.5s var(--ease);
+}
+.perspective-wrapper {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+.phone-frame {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+}
 
-        body {
-            font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-            transition: background 0.5s ease, color 0.5s ease;
-            overflow-x: hidden;
-            position: relative;
-        }
+/* ============================================================
+   Aurora Background — 多层翡翠光斑
+   ============================================================ */
+.aurora-layer {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+  will-change: transform;
+}
+.aurora-1 {
+  width: 70vw; height: 70vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%);
+  top: -30%; left: -15%;
+  animation: auroraFloat1 18s ease-in-out infinite;
+}
+.aurora-2 {
+  width: 55vw; height: 55vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 65%);
+  top: 40%; right: -20%;
+  animation: auroraFloat2 22s ease-in-out infinite;
+}
+.aurora-3 {
+  width: 45vw; height: 45vw;
+  background: radial-gradient(circle, rgba(52,211,153,0.10) 0%, transparent 70%);
+  bottom: -20%; left: 35%;
+  animation: auroraFloat3 20s ease-in-out infinite;
+}
 
-        /* ---- 复古扫描线叠加层 ---- */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 9999;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,var(--scanline-opacity)) 2px,
-                rgba(0,0,0,var(--scanline-opacity)) 4px
-            );
-            transition: background 0.5s ease;
-        }
+@keyframes auroraFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8vw, 5vh) scale(1.1); }
+  66% { transform: translate(-3vw, 10vh) scale(0.92); }
+}
+@keyframes auroraFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-6vw, -8vh) scale(1.08); }
+  66% { transform: translate(4vw, -3vh) scale(0.95); }
+}
+@keyframes auroraFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(5vw, -10vh) scale(1.12); }
+}
 
-        /* ================================================================
-           导航栏
-           ================================================================ */
-        .nav {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 1000;
-            background: var(--nav-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 2px solid var(--border);
-            transition: background 0.5s, border-color 0.5s;
-        }
-        .nav-inner {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .nav-logo {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.85rem;
-            color: var(--primary);
-            text-decoration: none;
-            letter-spacing: 2px;
-            transition: color 0.3s;
-        }
-        .nav-logo:hover { color: var(--secondary); }
-        .nav-links {
-            display: flex;
-            gap: 1.75rem;
-            list-style: none;
-            align-items: center;
-        }
-        .nav-links a {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.55rem;
-            color: var(--text-sub);
-            text-decoration: none;
-            transition: color 0.3s;
-            position: relative;
-        }
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--secondary);
-            transition: width 0.3s;
-        }
-        .nav-links a:hover { color: var(--primary); }
-        .nav-links a:hover::after { width: 100%; }
+/* ============================================================
+   Noise Texture — 胶片颗粒
+   ============================================================ */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
 
-        /* 主题切换按钮 */
-        .theme-toggle {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            color: var(--text);
-            font-size: 1.1rem;
-            cursor: pointer;
-            width: 40px; height: 40px;
-            border-radius: 0;  /* 像素风：方角 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            image-rendering: pixelated;
-        }
-        .theme-toggle:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-            box-shadow: 3px 3px 0 var(--primary);
-        }
+/* Particle canvas — between aurora and content */
+.particle-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
 
-        /* 汉堡菜单（移动端） */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-            background: none;
-            border: none;
-        }
-        .hamburger span {
-            display: block;
-            width: 26px; height: 3px;
-            background: var(--text);
-            transition: all 0.3s;
-        }
+/* ============================================================
+   Fluid Island Nav (Dock-inspired)
+   ============================================================ */
+.nav {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: calc(100% - 32px);
+  max-width: 600px;
+  background: var(--bg-nav);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0 1.5rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.4s var(--ease), border-color 0.4s var(--ease);
+}
+.nav-logo {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--heading);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  transition: color 0.3s;
+}
+.nav-logo:hover { color: var(--accent); }
 
-        /* ================================================================
-           首屏 Hero
-           ================================================================ */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: var(--bg-hero);
-            overflow: hidden;
-            transition: background 0.5s;
-        }
+.nav-links { display: flex; gap: 0.25rem; list-style: none; align-items: center; }
+.nav-links a {
+  display: block;
+  font-size: 0.8rem; font-weight: 500;
+  color: var(--text-dim); text-decoration: none;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  transition: all 0.35s var(--ease);
+}
+.nav-links a:hover {
+  color: var(--text);
+  background: var(--accent-glow);
+  transform: scale(1.08);
+}
 
-        /* 像素网格背景 */
-        .hero::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(37,99,235,0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(37,99,235,0.08) 1px, transparent 1px);
-            background-size: 40px 40px;
-            animation: gridScroll 20s linear infinite;
-        }
-        @keyframes gridScroll {
-            to { transform: translate(40px, 40px); }
-        }
+/* Dock proximity — adjacent items scale slightly */
+.nav-links a:hover + a,
+.nav-links a:has(+ a:hover) {
+  transform: scale(1.04);
+}
 
-        /* 粒子画布 */
-        .hero-canvas {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-        }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s var(--ease);
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            padding: 2rem;
-            max-width: 750px;
-        }
+.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; z-index: 101; }
+.hamburger span { display: block; width: 20px; height: 2px; background: var(--text); margin: 4px 0; border-radius: 2px; transition: all 0.3s var(--ease); }
 
-        /* 像素装饰边框 */
-        .hero-pixel-frame {
-            display: inline-block;
-            padding: 3rem 2.5rem;
-            position: relative;
-            border: 3px solid var(--primary);
-            box-shadow:
-                6px 6px 0 var(--secondary),
-                6px 6px 0 3px var(--primary);
-            image-rendering: pixelated;
-            transition: box-shadow 0.5s, border-color 0.5s;
-        }
-        @media (max-width: 600px) {
-            .hero-pixel-frame { padding: 2rem 1.25rem; }
-        }
+.nav-overlay {
+  position: fixed; inset: 0; z-index: 99;
+  background: rgba(8,8,10,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+.nav-overlay.open { opacity: 1; pointer-events: auto; }
+.nav-overlay .overlay-links { list-style: none; text-align: center; display: flex; flex-direction: column; gap: 2rem; }
+.nav-overlay .overlay-links a {
+  font-size: 1.8rem; font-weight: 700; color: var(--text-dim);
+  text-decoration: none;
+  transition: all 0.5s var(--ease);
+  transform: translateY(12px); opacity: 0;
+}
+.nav-overlay.open .overlay-links a { transform: translateY(0); opacity: 1; }
+.nav-overlay .overlay-links a:nth-child(1) { transition-delay: 0.05s; }
+.nav-overlay .overlay-links a:nth-child(2) { transition-delay: 0.12s; }
+.nav-overlay .overlay-links a:nth-child(3) { transition-delay: 0.19s; }
+.nav-overlay .overlay-links a:nth-child(4) { transition-delay: 0.26s; }
+.nav-overlay .overlay-links a:nth-child(5) { transition-delay: 0.33s; }
+.nav-overlay .overlay-links a:hover { color: var(--accent); }
 
-        .hero-name {
-            font-family: 'Press Start 2P', monospace;
-            font-size: clamp(1.2rem, 4vw, 2rem);
-            color: #fff;
-            margin-bottom: 1rem;
-            text-shadow: 3px 3px 0 var(--primary);
-            line-height: 1.6;
-        }
-        .hero-sub {
-            font-size: clamp(1rem, 3vw, 1.35rem);
-            color: var(--secondary);
-            font-weight: 400;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .hero-sub .cursor {
-            display: inline-block;
-            width: 3px;
-            height: 1.3em;
-            background: var(--secondary);
-            vertical-align: text-bottom;
-            animation: blink 0.7s step-end infinite;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        .hero-en {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.55rem;
-            color: var(--text-sub);
-            margin-top: 1.5rem;
-            letter-spacing: 3px;
-        }
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  padding: 5rem 1.25rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 1;
+}
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  align-items: flex-start;
+}
+.hero-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--border-hover);
+  border-radius: 9999px;
+}
+.hero-title {
+  font-weight: 800;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  line-height: 1.05; letter-spacing: -0.03em;
+  color: var(--heading);
+  margin-bottom: 1.5rem;
+}
+.hero-title .accent { color: var(--accent); }
+.hero-desc {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  max-width: 48ch; line-height: 1.8;
+  margin-bottom: 2.5rem;
+}
 
-        /* 向下滚动提示 */
-        .scroll-hint {
-            position: absolute;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            color: rgba(255,255,255,0.5);
-            font-size: 0.7rem;
-            animation: floatHint 2s ease-in-out infinite;
-        }
-        .scroll-hint .arrow {
-            font-size: 1.2rem;
-            font-family: 'Press Start 2P', monospace;
-        }
-        @keyframes floatHint {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(10px); }
-        }
+/* CTA with Magnet base */
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 0.9rem 1.8rem;
+  background: var(--accent); color: #000;
+  font-family: inherit; font-weight: 700; font-size: 0.95rem;
+  border: none; border-radius: 9999px;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.4s var(--ease);
+  will-change: transform;
+}
+.cta-btn .cta-icon-circle {
+  display: flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  transition: all 0.4s var(--ease);
+}
+.cta-btn:hover .cta-icon-circle {
+  transform: translate(2px, -2px) scale(1.08);
+}
+.cta-btn:active { transform: scale(0.98); }
 
-        /* ================================================================
-           通用区块
-           ================================================================ */
-        .section {
-            padding: 6rem 1.5rem;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .section-title {
-            font-family: 'Press Start 2P', monospace;
-            font-size: clamp(0.75rem, 2.5vw, 1rem);
-            text-align: center;
-            color: var(--heading);
-            margin-bottom: 0.75rem;
-            letter-spacing: 3px;
-            transition: color 0.5s;
-        }
-        .section-subtitle {
-            text-align: center;
-            color: var(--text-sub);
-            margin-bottom: 3.5rem;
-            font-size: 0.95rem;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .section-subtitle::before,
-        .section-subtitle::after {
-            content: ' // ';
-            color: var(--secondary);
-        }
+.cta-btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 0.9rem 1.8rem;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit; font-weight: 600; font-size: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.4s var(--ease);
+  will-change: transform;
+}
+.cta-btn-secondary:hover {
+  border-color: var(--border-hover);
+  background: var(--accent-glow);
+}
+.cta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 
-        /* ---- 像素装饰分割线 ---- */
-        .pixel-divider {
-            width: 80px; height: 8px;
-            margin: 0 auto 1.5rem;
-            background: repeating-linear-gradient(
-                90deg,
-                var(--primary) 0px, var(--primary) 12px,
-                var(--secondary) 12px, var(--secondary) 24px
-            );
-            image-rendering: pixelated;
-        }
+/* Hero visual — animated orbs */
+.hero-visual {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-orb {
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(16,185,129,0.18) 0%, transparent 70%);
+  animation: orbPulse 4s ease-in-out infinite;
+}
+.hero-orb::after {
+  content: '';
+  position: absolute; inset: 40px; border-radius: 50%;
+  border: 1px solid var(--border);
+  animation: orbPulseRing 4s ease-in-out infinite;
+}
+[data-theme="light"] .hero-orb {
+  background: radial-gradient(circle at 40% 40%, rgba(5,150,105,0.28) 0%, rgba(5,150,105,0.06) 50%, transparent 70%);
+}
+[data-theme="light"] .hero-orb::after {
+  border-color: rgba(5,150,105,0.18);
+}
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+@keyframes orbPulseRing {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.10); opacity: 0.8; }
+}
 
-        /* ---- 滚动动画 ---- */
-        .fade-section {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-        .fade-section.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+@keyframes rippleExpand {
+  0%   { transform:translate(-50%,-50%) scale(0.2); opacity:1; }
+  100% { transform:translate(-50%,-50%) scale(3); opacity:0; }
+}
 
-        /* ================================================================
-           关于我
-           ================================================================ */
-        .about-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            padding: 2.5rem 2rem;
-            box-shadow: 6px 6px 0 var(--pixel-shadow);
-            transition: all 0.5s;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        .about-card:hover {
-            box-shadow: 8px 8px 0 var(--primary);
-            transform: translate(-2px, -2px);
-        }
-        .about-card p {
-            font-size: 1.05rem;
-            line-height: 2;
-            margin-bottom: 1rem;
-        }
-        .about-card .highlight {
-            color: var(--primary);
-            font-weight: 700;
-        }
-        .about-card .highlight-green {
-            color: var(--secondary);
-            font-weight: 700;
-        }
-        .about-card .highlight-amber {
-            color: var(--accent);
-            font-weight: 700;
-        }
+/* ============================================================
+   Section Common
+   ============================================================ */
+.section { padding: 5rem 1.25rem; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+.section-label {
+  display: inline-block;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--border-hover);
+  border-radius: 9999px;
+}
+.section-title {
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: -0.02em;
+  color: var(--heading);
+  margin-bottom: 0.75rem;
+}
+.section-sub {
+  color: var(--text-dim);
+  font-size: 1rem;
+  max-width: 55ch; line-height: 1.8;
+  margin-bottom: 3rem;
+}
 
-        .about-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            margin-top: 1.5rem;
-        }
-        .about-tag {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.48rem;
-            padding: 0.4rem 0.8rem;
-            background: var(--tag-bg);
-            color: var(--tag-text);
-            border: 1px solid var(--border);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-        }
-        .about-tag:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 3px 3px 0 var(--primary);
-        }
+/* ============================================================
+   FluidGlass Card — 比 Doppelrand 更透
+   ============================================================ */
+.glass-card {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  transition: border-color 0.5s var(--ease), box-shadow 0.5s var(--ease);
+}
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  pointer-events: none;
+  transition: all 0.5s var(--ease);
+}
+.glass-card .spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: inherit;
+  transition: opacity 0.4s var(--ease);
+}
+.glass-card:hover { border-color: var(--border-hover); }
+.glass-card:hover::before { box-shadow: inset 0 1px 2px rgba(16,185,129,0.10); }
+.glass-card:hover .spotlight { opacity: 1; }
+.glass-card > * { position: relative; z-index: 1; }
 
-        /* ================================================================
-           技能
-           ================================================================ */
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .skill-item {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            padding: 1.5rem;
-            transition: all 0.5s;
-            box-shadow: 4px 4px 0 var(--pixel-shadow);
-        }
-        .skill-item:hover {
-            box-shadow: 6px 6px 0 var(--secondary);
-            transform: translate(-2px, -2px);
-        }
-        .skill-icon {
-            font-size: 2.2rem;
-            margin-bottom: 0.75rem;
-        }
-        .skill-name {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.6rem;
-            color: var(--heading);
-            margin-bottom: 0.75rem;
-            letter-spacing: 1px;
-            transition: color 0.5s;
-        }
-        .skill-bar-wrap {
-            background: var(--bar-bg);
-            height: 14px;
-            border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-            transition: background 0.5s;
-        }
-        .skill-bar-fill {
-            height: 100%;
-            background: repeating-linear-gradient(
-                90deg,
-                var(--primary) 0px, var(--primary) 8px,
-                var(--primary-d) 8px, var(--primary-d) 16px
-            );
-            width: 0;
-            transition: width 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
-            image-rendering: pixelated;
-        }
-        .skill-bar-fill.green {
-            background: repeating-linear-gradient(
-                90deg,
-                var(--secondary) 0px, var(--secondary) 8px,
-                var(--secondary-d) 8px, var(--secondary-d) 16px
-            );
-        }
-        .skill-bar-fill.amber {
-            background: repeating-linear-gradient(
-                90deg,
-                var(--accent) 0px, var(--accent) 8px,
-                #d97706 8px, #d97706 16px
-            );
-        }
-        .skill-percent {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.5rem;
-            color: var(--text-sub);
-            text-align: right;
-            margin-top: 0.35rem;
-        }
+/* ---- Float Card — 3D 漂浮卡片 ---- */
+.float-card {
+  transform-style: preserve-3d;
+  transition: opacity 0.4s var(--ease);
+  position: relative;
+}
+/* Doppelrand 外壳 — 天青色 */
+.float-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid rgba(10,186,181,0.25);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: border-color 0.5s var(--ease), opacity 0.5s var(--ease);
+}
+.float-card:hover::before { border-color: rgba(10,186,181,0.65); opacity: 1; }
 
-        /* 标签云 */
-        .tag-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            justify-content: center;
-            max-width: 700px;
-            margin: 2rem auto 0;
-        }
-        .tag-cloud span {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.5rem;
-            padding: 0.5rem 1rem;
-            border: 2px solid var(--border);
-            color: var(--text-sub);
-            transition: all 0.3s;
-            cursor: default;
-        }
-        .tag-cloud span:hover {
-            color: var(--primary);
-            border-color: var(--primary);
-            transform: scale(1.1);
-            box-shadow: 4px 4px 0 var(--primary);
-        }
-        .tag-cloud span:nth-child(odd):hover {
-            color: var(--secondary);
-            border-color: var(--secondary);
-            box-shadow: 4px 4px 0 var(--secondary);
-        }
+[data-theme="light"] .float-card::before {
+  border-color: rgba(10,186,181,0.35);
+  opacity: 0.8;
+}
+[data-theme="light"] .float-card:hover::before {
+  border-color: rgba(10,186,181,0.7);
+  opacity: 1;
+}
+[data-theme="light"] .float-card::after {
+  opacity: 0.4;
+}
+[data-theme="light"] .float-card-inner {
+  border-color: rgba(0,0,0,0.08);
+}
+[data-theme="light"] .float-card-inner::before {
+  border-color: rgba(0,0,0,0.04);
+}
+[data-theme="light"] .float-card-inner::after {
+  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 20%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.04) 80%, transparent 100%);
+}
 
-        /* ================================================================
-           项目
-           ================================================================ */
-        .project-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            padding: 2rem;
-            box-shadow: 6px 6px 0 var(--pixel-shadow);
-            text-align: center;
-            max-width: 550px;
-            margin: 0 auto;
-            transition: all 0.5s;
-        }
-        .project-card:hover {
-            box-shadow: 8px 8px 0 var(--accent);
-            transform: translate(-2px, -2px);
-        }
-        .project-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        .project-name {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 0.7rem;
-            color: var(--heading);
-            margin-bottom: 0.75rem;
-            transition: color 0.5s;
-        }
-        .project-desc {
-            color: var(--text-sub);
-            font-size: 0.95rem;
-        }
+/* 四角括号 — flammini 风格 */
+.float-card::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: calc(var(--radius) + 6px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+  transition: opacity 0.5s var(--ease);
+  background:
+    /* 左上 */ linear-gradient(135deg, var(--accent) 2px, transparent 2px) 0 0 / 8px 2px no-repeat,
+    linear-gradient(135deg, var(--accent) 2px, transparent 2px) 0 0 / 2px 8px no-repeat,
+    /* 右上 */ linear-gradient(225deg, var(--accent) 2px, transparent 2px) 100% 0 / 8px 2px no-repeat,
+    linear-gradient(225deg, var(--accent) 2px, transparent 2px) 100% 0 / 2px 8px no-repeat,
+    /* 左下 */ linear-gradient(45deg, var(--accent) 2px, transparent 2px) 0 100% / 8px 2px no-repeat,
+    linear-gradient(45deg, var(--accent) 2px, transparent 2px) 0 100% / 2px 8px no-repeat,
+    /* 右下 */ linear-gradient(315deg, var(--accent) 2px, transparent 2px) 100% 100% / 8px 2px no-repeat,
+    linear-gradient(315deg, var(--accent) 2px, transparent 2px) 100% 100% / 2px 8px no-repeat;
+}
+.float-card:hover::after { opacity: 0.7; }
 
-        /* ================================================================
-           联系方式
-           ================================================================ */
-        .contact-card {
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            padding: 2.5rem 2rem;
-            box-shadow: 6px 6px 0 var(--pixel-shadow);
-            text-align: center;
-            max-width: 500px;
-            margin: 0 auto;
-            transition: all 0.5s;
-        }
-        .contact-card:hover {
-            box-shadow: 8px 8px 0 var(--primary);
-            transform: translate(-2px, -2px);
-        }
-        .contact-price {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 1.2rem;
-            color: var(--accent);
-            margin: 1.5rem 0;
-            animation: pricePulse 2s ease-in-out infinite;
-        }
-        @keyframes pricePulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
-        }
-        .contact-links {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
-        }
-        .contact-links a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 52px; height: 52px;
-            border: 2px solid var(--border);
-            color: var(--text-sub);
-            font-size: 1.3rem;
-            text-decoration: none;
-            transition: all 0.3s;
-            image-rendering: pixelated;
-        }
-        .contact-links a:hover {
-            color: var(--primary);
-            border-color: var(--primary);
-            box-shadow: 4px 4px 0 var(--primary);
-            transform: translate(-2px, -2px);
-        }
+.float-card-inner {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  transition: border-color 0.5s var(--ease), box-shadow 0.3s ease-out;
+  backface-visibility: hidden;
+}
+/* 内边框 + 顶部微光高线 */
+.float-card-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,0.05);
+  pointer-events: none;
+  z-index: 0;
+}
+.float-card-inner::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 12px; right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 80%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.float-card:hover .float-card-inner::after {
+  opacity: 1.5;
+}
+.float-card-inner > * { position: relative; z-index: 1; }
 
-        /* ================================================================
-           证书展示
-           ================================================================ */
-        .cert-display{
-            display:flex;justify-content:center;align-items:flex-start;gap:2.5rem;flex-wrap:wrap;
-        }
-        .cert-frame{
-            position:relative;background:var(--bg-card);border:3px solid var(--border);
-            padding:1rem;
-            box-shadow:4px 4px 0 var(--border),8px 8px 0 var(--pixel-shadow);
-            transition:all 0.3s cubic-bezier(0.16,1,0.3,1);max-width:500px;cursor:pointer;
-        }
-        .cert-frame:hover{
-            box-shadow:4px 4px 0 var(--primary),8px 8px 0 var(--secondary);
-            transform:translate(-2px,-2px);
-        }
-        .cert-frame:active{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--border),4px 4px 0 var(--pixel-shadow)}
-        .cert-frame img{width:100%;display:block;image-rendering:auto}
-        .cert-badge{
-            position:absolute;top:-14px;right:-14px;
-            font-family:'Press Start 2P',monospace;font-size:0.42rem;
-            background:var(--secondary);color:#000;padding:0.35rem 0.6rem;
-            box-shadow:3px 3px 0 rgba(0,0,0,0.3);image-rendering:pixelated;
-            letter-spacing:1px;
-        }
-        .cert-info{
-            background:var(--bg-card);border:2px solid var(--border);
-            padding:1.8rem;max-width:400px;
-            box-shadow:4px 4px 0 var(--border),8px 8px 0 var(--pixel-shadow);
-        }
-        .cert-info h3{font-family:'Press Start 2P',monospace;font-size:0.52rem;color:var(--secondary);margin-bottom:1.2rem;letter-spacing:2px}
-        .cert-info dl{font-size:0.85rem}
-        .cert-info dt{color:var(--text-sub);font-size:0.68rem;margin-top:0.7rem;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px}
-        .cert-info dd{color:var(--text);font-weight:500;padding-left:0.25rem}
-        .cert-info .cert-number{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--primary);word-break:break-all;background:var(--bg);padding:0.25rem 0.5rem;margin-top:0.15rem;display:inline-block}
-        .cert-overlay{
-            display:none;position:fixed;inset:0;z-index:10000;
-            background:rgba(0,0,0,0.9);justify-content:center;align-items:center;cursor:pointer;
-            backdrop-filter:blur(4px);
-        }
-        .cert-overlay.show{display:flex}
-        .cert-overlay img{max-width:90vw;max-height:90vh;border:4px solid var(--primary);box-shadow:0 0 60px rgba(96,165,250,0.2)}
-        .cert-overlay .close-hint{
-            position:absolute;top:2rem;right:2rem;color:#fff;font-family:'Press Start 2P',monospace;
-            font-size:0.48rem;opacity:0.5;transition:opacity 0.3s;
-        }
-        .cert-overlay .close-hint:hover{opacity:0.9}
+/* Depth shadow — JS 调整偏移和透明度模拟悬浮高度 */
+.float-shadow {
+  position: absolute;
+  bottom: -8px; left: 8%; right: 8%;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(16,185,129,0.08);
+  filter: blur(12px);
+  pointer-events: none;
+  z-index: -1;
+  transition: all 0.3s ease-out;
+}
+.float-card-inner .spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+}
 
-        /* ================================================================
-           3D 专辑画廊 —— 正面圆环
-           ================================================================ */
-        .gallery-scene{
-            perspective:1500px;perspective-origin:50% 50%;
-            height:600px;display:flex;align-items:center;justify-content:center;
-            position:relative;overflow:visible;
-        }
-        .gallery-stage{
-            transform-style:preserve-3d;
-            transition:transform 0.1s linear;
-            cursor:grab;
-            position:relative;
-            width:300px;height:300px;
-        }
-        .gallery-stage:active{cursor:grabbing}
-        .gallery-stage.dragging{transition:none}
-        .gallery-disc{
-            position:absolute;width:80px;height:80px;
-            left:50%;top:50%;margin-left:-40px;margin-top:-40px;
-            border-radius:50%;
-            border:3px solid var(--border);
-            background:var(--bg-card);
-            transform:translateZ(-1px);
-            pointer-events:none;
-        }
-        .gallery-disc::after{
-            content:'\25C7';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-            font-size:1rem;color:var(--secondary);
-        }
-        .album-slot{
-            position:absolute;width:90px;height:90px;
-            left:50%;top:50%;margin-left:-45px;margin-top:-45px;
-            transform-style:preserve-3d;
-            cursor:pointer;
-        }
-        .album-slot:hover{z-index:10}
-        .album-slot:hover .album-face-front{filter:brightness(1.25);box-shadow:0 0 20px var(--primary)}
-        .album-face{position:absolute;inset:0;backface-visibility:hidden;transition:transform 0.6s}
-        .album-face-front{
-            border:2px solid var(--border);box-shadow:3px 3px 0 var(--pixel-shadow);
-            display:flex;align-items:center;justify-content:center;overflow:hidden;
-        }
-        .album-face-front img{width:100%;height:100%;object-fit:cover;display:block}
-        .album-face-back{
-            background:var(--bg-card);border:2px solid var(--border);
-            transform:rotateY(180deg);
-            padding:0.4rem;display:flex;flex-direction:column;justify-content:center;
-            overflow:hidden;
-        }
-        .album-face-back .alb-artist{font-family:'Press Start 2P',monospace;font-size:0.3rem;color:var(--primary);margin-bottom:0.15rem}
-        .album-face-back .alb-title{font-size:0.55rem;color:var(--heading);font-weight:700;margin-bottom:0.15rem;line-height:1.2}
-        .album-face-back .alb-year{font-family:'JetBrains Mono',monospace;font-size:0.45rem;color:var(--text-sub)}
-        .album-slot.flipped .album-face-front{transform:rotateY(180deg)}
-        .album-slot.flipped .album-face-back{transform:rotateY(0deg)}
-        .gallery-controls{
-            display:flex;justify-content:center;align-items:center;gap:1.5rem;margin-top:1rem;
-        }
-        .gallery-btn{
-            font-family:'Press Start 2P',monospace;font-size:0.48rem;
-            background:var(--bg-card);border:2px solid var(--border);color:var(--text);
-            padding:0.6rem 1rem;cursor:pointer;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-            box-shadow:2px 2px 0 var(--border);
-        }
-        .gallery-btn:hover{
-            border-color:var(--primary);color:var(--primary);
-            box-shadow:3px 3px 0 var(--primary);transform:translate(-1px,-1px);
-        }
-        .gallery-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--border)}
-        .gallery-hint{
-            font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-sub);
-            text-align:center;margin-top:0.75rem;opacity:0.7;
-        }
-        .album-dot-nav{display:flex;gap:0.35rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;max-width:500px;margin-left:auto;margin-right:auto}
-        .album-dot{
-            width:8px;height:8px;border:1px solid var(--border);background:transparent;
-            cursor:pointer;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-        }
-        .album-dot.active{background:var(--secondary);border-color:var(--secondary);box-shadow:0 0 6px var(--secondary)}
-        .album-dot:hover{border-color:var(--primary);transform:scale(1.3)}
+/* ============================================================
+   About
+   ============================================================ */
+.about-text { font-size: 1.05rem; line-height: 2; max-width: 60ch; }
+.about-text .hl { color: var(--accent); font-weight: 600; }
+.about-tags-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 2rem; }
+.about-tag {
+  font-size: 0.75rem; font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  color: var(--text-dim);
+  transition: all 0.3s var(--ease);
+}
+.about-tag:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
-        /* ================================================================
-           访客留言板
-           ================================================================ */
-        .guestbook{max-width:600px;margin:0 auto}
-        .gb-form{
-            display:flex;flex-direction:column;gap:0.8rem;margin-bottom:2.5rem;
-            background:var(--bg-card);border:2px solid var(--border);
-            padding:1.5rem;box-shadow:4px 4px 0 var(--border),8px 8px 0 var(--pixel-shadow);
-        }
-        .gb-row{display:flex;gap:0.8rem}
-        .gb-input{
-            flex:1;padding:0.75rem 0.9rem;font-family:'Noto Sans SC',sans-serif;font-size:0.85rem;
-            background:var(--bg);border:2px solid var(--border);color:var(--text);
-            transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-        }
-        .gb-input:focus{outline:none;border-color:var(--primary);box-shadow:2px 2px 0 var(--primary)}
-        .gb-input::placeholder{color:var(--text-sub);opacity:0.5}
-        .gb-textarea{
-            resize:vertical;min-height:90px;
-            padding:0.75rem 0.9rem;font-family:'Noto Sans SC',sans-serif;font-size:0.85rem;
-            background:var(--bg);border:2px solid var(--border);color:var(--text);
-            transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-        }
-        .gb-textarea:focus{outline:none;border-color:var(--primary);box-shadow:2px 2px 0 var(--primary)}
-        .gb-textarea::placeholder{color:var(--text-sub);opacity:0.5}
-        .gb-submit{
-            font-family:'Press Start 2P',monospace;font-size:0.48rem;letter-spacing:1px;
-            background:var(--secondary);border:none;color:#000;
-            padding:0.8rem 1.5rem;cursor:pointer;
-            transition:all 0.25s cubic-bezier(0.16,1,0.3,1);
-            align-self:flex-end;box-shadow:3px 3px 0 var(--border);
-        }
-        .gb-submit:hover{
-            background:var(--secondary-d);transform:translate(-1px,-1px);
-            box-shadow:4px 4px 0 var(--pixel-shadow);
-        }
-        .gb-submit:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--border)}
-        .gb-messages{display:flex;flex-direction:column;gap:0.75rem}
-        .gb-msg{
-            background:var(--bg-card);border:2px solid var(--border);
-            padding:1.1rem 1.3rem;position:relative;
-            box-shadow:3px 3px 0 var(--border),6px 6px 0 var(--pixel-shadow);
-            animation:msgIn 0.4s cubic-bezier(0.16,1,0.3,1);
-            transition:box-shadow 0.3s;
-        }
-        .gb-msg:hover{box-shadow:3px 3px 0 var(--primary),6px 6px 0 var(--pixel-shadow)}
-        @keyframes msgIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        .gb-msg .msg-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.4rem}
-        .gb-msg .msg-name{font-family:'Press Start 2P',monospace;font-size:0.4rem;color:var(--secondary)}
-        .gb-msg .msg-time{font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--text-sub)}
-        .gb-msg .msg-body{font-size:0.9rem;color:var(--text);line-height:1.7;word-break:break-word}
-        .gb-empty{text-align:center;color:var(--text-sub);font-size:0.85rem;padding:2rem;font-family:'JetBrains Mono',monospace}
+/* ============================================================
+   Bento
+   ============================================================ */
+.bento { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.bento-item { min-height: auto; }
+.bento-item.tall { grid-row: span 1; }
 
-        /* ================================================================
-           页脚
-           ================================================================ */
-        .footer {
-            background: var(--footer-bg);
-            color: var(--footer-text);
-            text-align: center;
-            padding: 2.5rem 1.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            transition: background 0.5s, color 0.5s;
-        }
-        .footer .pixel-heart {
-            display: inline-block;
-            color: #ef4444;
-            animation: heartBeat 1.5s ease-in-out infinite;
-        }
-        @keyframes heartBeat {
-            0%, 100% { transform: scale(1); }
-            15% { transform: scale(1.3); }
-            30% { transform: scale(1); }
-        }
+/* ============================================================
+   BlurText Scroll Reveal
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(6px);
+  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease), filter 0.8s var(--ease);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
 
-        /* ================================================================
-           响应式
-           ================================================================ */
-        @media (max-width: 768px) {
-            .nav-links {
-                position: fixed;
-                top: 0; right: -100%;
-                width: 260px; height: 100vh;
-                background: var(--bg-card);
-                flex-direction: column;
-                padding: 5rem 2rem 2rem;
-                gap: 2rem;
-                transition: right 0.4s ease;
-                border-left: 2px solid var(--border);
-                z-index: 1001;
-            }
-            .nav-links.open { right: 0; }
-            .nav-links a { font-size: 0.65rem; }
-            .hamburger { display: flex; z-index: 1002; }
-            .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,6px); }
-            .hamburger.open span:nth-child(2) { opacity: 0; }
-            .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-6px); }
+/* ============================================================
+   Gallery — 3D 圆环
+   ============================================================ */
+.gallery-placeholder {
+  min-height: 300px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.gallery-scene {
+  perspective: 1200px; perspective-origin: 50% 50%;
+  height: 360px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: visible;
+}
+.gallery-stage {
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear;
+  cursor: grab;
+  position: relative;
+  width: 300px; height: 300px;
+}
+.gallery-stage:active { cursor: grabbing; }
+.gallery-stage.dragging { transition: none; }
+.gallery-disc {
+  position: absolute; width: 52px; height: 52px;
+  left: 50%; top: 50%; margin-left: -26px; margin-top: -26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  transform: translateZ(-1px);
+  pointer-events: none;
+}
+.gallery-disc::after {
+  content: '\25C7'; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem; color: var(--accent);
+}
+.album-slot {
+  position: absolute; width: 64px; height: 64px;
+  left: 50%; top: 50%; margin-left: -32px; margin-top: -32px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+.album-slot:hover { z-index: 10; }
+.album-slot:hover .album-face-front {
+  filter: brightness(1.15);
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+.album-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  transition: transform 0.6s var(--ease);
+  border-radius: 6px;
+}
+.album-face-front {
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.album-face-front img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.album-face-back {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transform: rotateY(180deg);
+  padding: 0.5rem; display: flex; flex-direction: column; justify-content: center;
+  overflow: hidden;
+  text-align: center;
+}
+.album-face-back .alb-artist {
+  font-size: 0.6rem; font-weight: 600; color: var(--accent);
+  margin-bottom: 0.2rem;
+}
+.album-face-back .alb-title {
+  font-size: 0.65rem; color: var(--heading); font-weight: 700;
+  line-height: 1.3;
+}
+.album-slot.flipped .album-face-front { transform: rotateY(180deg); }
+.album-slot.flipped .album-face-back  { transform: rotateY(0deg); }
 
-            .section { padding: 4rem 1rem; }
-            .skills-grid { grid-template-columns: 1fr; }
-            .gallery-scene{height:400px;perspective:1000px}
-            .album-slot{width:60px;height:60px;margin-left:-30px;margin-top:-30px}
-            .gallery-disc{width:50px;height:50px;margin-left:-25px;margin-top:-25px}
-            .cert-display{flex-direction:column;align-items:center}
-            .gb-row{flex-direction:column}
-        }
-        @media (max-width: 480px) {
-            .hero-pixel-frame { padding: 1.5rem 1rem; }
-            .hero-name { font-size: 0.9rem; }
-            .hero-en { font-size: 0.45rem; }
-            .about-card { padding: 1.5rem 1rem; }
-            .about-card p { font-size: 0.9rem; line-height: 1.9; }
-            .tag-cloud span { font-size: 0.42rem; padding: 0.35rem 0.65rem; }
-        }
+.gallery-controls {
+  display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;
+}
+.gallery-btn {
+  font-family: inherit; font-size: 0.8rem; font-weight: 600;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.55rem 1.1rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.gallery-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-glow);
+}
+.gallery-hint {
+  font-size: 0.75rem; color: var(--text-dim);
+  text-align: center; margin-top: 0.75rem; opacity: 0.6;
+}
+.album-dot-nav {
+  display: flex; gap: 0.35rem; justify-content: center; margin-top: 1rem;
+  flex-wrap: wrap; max-width: 500px; margin-left: auto; margin-right: auto;
+}
+.album-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.album-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.album-dot:hover { border-color: var(--accent); transform: scale(1.4); }
 
-        /* ---- 移动端遮罩 ---- */
-        .nav-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .nav-overlay.show { display: block; }
-    </style>
+@media (max-width: 768px) {
+  .gallery-scene { height: 380px; perspective: 1000px; }
+  .album-slot { width: 62px; height: 62px; margin-left: -31px; margin-top: -31px; }
+  .gallery-disc { width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
+}
+
+/* ============================================================
+   Guestbook
+   ============================================================ */
+.gb-form {
+  display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;
+}
+.gb-row { display: flex; gap: 0.75rem; }
+.gb-input {
+  flex: 1; padding: 0.7rem 0.9rem;
+  font-family: inherit; font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.3s var(--ease);
+}
+.gb-input:focus { border-color: var(--accent); }
+.gb-input::placeholder { color: var(--text-dim); opacity: 0.5; }
+.gb-textarea {
+  padding: 0.7rem 0.9rem;
+  font-family: inherit; font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  color: var(--text);
+  outline: none;
+  resize: vertical; min-height: 80px;
+  transition: border-color 0.3s var(--ease);
+}
+.gb-textarea:focus { border-color: var(--accent); }
+.gb-textarea::placeholder { color: var(--text-dim); opacity: 0.5; }
+.gb-submit {
+  font-family: inherit; font-weight: 600; font-size: 0.85rem;
+  background: var(--accent); color: #000;
+  border: none; border-radius: 9999px;
+  padding: 0.7rem 1.5rem; cursor: pointer;
+  align-self: flex-end;
+  transition: all 0.3s var(--ease);
+}
+.gb-submit:active { transform: scale(0.98); }
+.gb-msgs { display: flex; flex-direction: column; gap: 0.5rem; }
+.gb-msg {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.9rem 1.1rem;
+}
+.gb-msg .msg-head { display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
+.gb-msg .msg-name { font-weight: 600; font-size: 0.8rem; color: var(--accent); }
+.gb-msg .msg-time { font-size: 0.7rem; color: var(--text-dim); }
+.gb-msg .msg-body { font-size: 0.85rem; color: var(--text); line-height: 1.6; word-break: break-word; }
+.gb-empty { text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 2rem; }
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-dim); font-size: 0.85rem;
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Nav */
+  .nav-links { display: none; }
+  .hamburger { display: block; }
+  .nav { max-width: calc(100% - 24px); padding: 0 1rem; height: 48px; }
+
+  /* Hero */
+  .hero { padding: 5rem 1.25rem 3rem; min-height: auto; }
+  .hero-content { grid-template-columns: 1fr; gap: 1.5rem; }
+  .hero-title { font-size: clamp(2rem, 10vw, 3.5rem); }
+  .hero-desc { font-size: 0.95rem; }
+  .hero-visual { min-height: 180px; }
+  .hero-orb { width: 180px; height: 180px; }
+  .hero-eyebrow { font-size: 0.65rem; padding: 0.25rem 0.7rem; }
+  .cta-btn, .cta-btn-secondary { padding: 0.75rem 1.4rem; font-size: 0.85rem; }
+  .cta-btn .cta-icon-circle { width: 1.6rem; height: 1.6rem; }
+
+  /* Sections */
+  .section { padding: 5rem 1.25rem; }
+  .section-title { font-size: clamp(1.5rem, 6vw, 2rem); }
+  .section-sub { font-size: 0.9rem; margin-bottom: 2rem; }
+  .section-label { font-size: 0.65rem; padding: 0.2rem 0.65rem; }
+
+  /* Cards */
+  .float-card-inner { padding: 1.5rem 1.25rem; border-radius: 1.5rem; }
+  .float-card::before { border-radius: calc(1.5rem + 2px) !important; }
+  .float-card::after { border-radius: calc(1.5rem + 6px) !important; inset: -4px; }
+  .about-text { font-size: 0.9rem; line-height: 1.85; }
+  .about-tag { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+
+  /* Bento */
+  .bento { grid-template-columns: 1fr; gap: 1rem; }
+  .bento-item { min-height: auto; }
+  .bento-item.tall { grid-row: span 1; }
+
+  /* Gallery */
+  .gallery-scene { height: 360px; }
+  .album-slot { width: 64px; height: 64px; margin-left: -32px; margin-top: -32px; }
+  .gallery-btn { font-size: 0.7rem; padding: 0.45rem 0.9rem; }
+  .gallery-hint { font-size: 0.7rem; }
+
+  /* Footer */
+  .footer { padding: 2rem 1.25rem; font-size: 0.75rem; }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 4rem 1rem 2.5rem; }
+  .hero-title { font-size: clamp(1.7rem, 9vw, 2.5rem); }
+  .hero-desc { font-size: 0.85rem; }
+  .hero-orb { width: 140px; height: 140px; }
+  .section { padding: 3.5rem 1rem; }
+  .float-card-inner { padding: 1.25rem 1rem; border-radius: 1.25rem; }
+  .float-card::before { border-radius: calc(1.25rem + 2px) !important; }
+  .float-card::after { border-radius: calc(1.25rem + 6px) !important; inset: -3px; }
+  .gallery-scene { height: 300px; }
+  .album-slot { width: 52px; height: 52px; margin-left: -26px; margin-top: -26px; }
+  .gallery-btn { font-size: 0.65rem; padding: 0.4rem 0.75rem; }
+  .cta-btn, .cta-btn-secondary { padding: 0.65rem 1.2rem; font-size: 0.8rem; }
+}
+
+/* ============================================================
+   Reduced Motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+  .reveal { opacity: 1; transform: none; filter: none; }
+  .aurora-layer { display: none; }
+  .noise-overlay { display: none; }
+}
+</style>
 </head>
 <body>
 
-    <!-- ================================================================
-         导航栏
-         ================================================================ -->
-    <nav class="nav">
-        <div class="nav-inner">
-            <a href="#" class="nav-logo">◈ HZ</a>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#about">关于</a></li>
-                <li><a href="#certs">证书</a></li>
-                <li><a href="#skills">技能</a></li>
-                <li><a href="#projects">项目</a></li>
-                <li><a href="#gallery">画廊</a></li>
-                <li><a href="#contact">联系</a></li>
-                <li><a href="#guestbook">留言</a></li>
-                <li><button class="theme-toggle" id="themeToggle" aria-label="切换主题">🌙</button></li>
-            </ul>
-            <button class="hamburger" id="hamburger" aria-label="菜单">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-    </nav>
-    <div class="nav-overlay" id="navOverlay"></div>
+<!-- Fixed layers (outside perspective, always viewport-relative) -->
+<div class="aurora-layer aurora-1"></div>
+<div class="aurora-layer aurora-2"></div>
+<div class="aurora-layer aurora-3"></div>
+<canvas id="particleCanvas" class="particle-canvas"></canvas>
+<div class="noise-overlay"></div>
 
-    <!-- ================================================================
-         首屏 Hero
-         ================================================================ -->
-    <section class="hero" id="home">
-        <canvas class="hero-canvas" id="heroCanvas"></canvas>
-        <div class="hero-content">
-            <div class="hero-pixel-frame">
-                <h1 class="hero-name">贺 智 航</h1>
-                <p class="hero-sub">
-                    <span id="typewriter"></span><span class="cursor"></span>
-                </p>
-                <p class="hero-en">→ HERTZ . EARTH ONLINE PLAYER ←</p>
-            </div>
-        </div>
-        <div class="scroll-hint">
-            <span>SCROLL</span>
-            <span class="arrow">▼</span>
-        </div>
-    </section>
+<!-- Phone frame -->
+<div class="phone-frame">
+<!-- Perspective wrapper for ring effect -->
+<div class="perspective-wrapper">
 
-    <!-- ================================================================
-         关于我
-         ================================================================ -->
-    <section class="section fade-section" id="about">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">⚿ 关 于 我 ⚿</h2>
-        <p class="section-subtitle">ABOUT ME</p>
+<!-- ============================================================
+     Nav
+     ============================================================ -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo">HZ</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#projects">项目</a></li>
+    <li><a href="#gallery">画廊</a></li>
+    <li><a href="#contact">联系</a></li>
+    <li><a href="#guestbook">留言</a></li>
+  </ul>
+  <button class="theme-toggle" id="themeToggle" aria-label="切换主题">☀</button>
+  <button class="hamburger" id="hamburger" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-overlay" id="navOverlay">
+  <ul class="overlay-links">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#projects">项目</a></li>
+    <li><a href="#gallery">画廊</a></li>
+    <li><a href="#contact">联系</a></li>
+    <li><a href="#guestbook">留言</a></li>
+  </ul>
+</div>
 
-        <div class="about-card">
-            <p>
-                嘿，我是<span class="highlight">贺智航</span>，也可以叫我<span class="highlight-green">赫兹</span>。
-            </p>
-            <p>
-                来自<span class="highlight">广东惠州</span>，一个正在学习怎么跟
-                <span class="highlight-green">AI</span> 打交道的普通人。
-            </p>
-            <p>
-                业余时间不是在<span class="highlight-amber">打瓦</span>就是在
-                <span class="highlight-green">星露谷</span>里种地——最近严重中毒，
-                希望有<span class="highlight">老乡</span>跟我一起联机。
-            </p>
-            <p>
-                最喜欢的歌手是<span class="highlight-amber">YZH</span>，
-                可能有些小众但他真的是<span class="highlight">宝藏rapper</span> 🎤
-            </p>
-            <p style="color:var(--text-sub);font-size:0.9rem;margin-top:1.5rem;">
-                这段碎碎念只是我的一部分<br>愿我们在接下来的日子里更深入地认识彼此 ✨
-            </p>
-
-            <div class="about-tags">
-                <span class="about-tag">🎮 Valorant</span>
-                <span class="about-tag">🌾 星露谷</span>
-                <span class="about-tag">🤖 AI 学习者</span>
-                <span class="about-tag">🎵 YZH</span>
-                <span class="about-tag">📍 惠州</span>
-                <span class="about-tag">🎧 Hip-Hop</span>
-                <span class="about-tag">☕ 熬夜冠军</span>
-                <span class="about-tag">🕹️ 游戏宅</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- ================================================================
-         证书展示
-         ================================================================ -->
-    <section class="section fade-section" id="certs">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">📜 证 书 📜</h2>
-        <p class="section-subtitle">CERTIFICATES</p>
-
-        <div class="cert-display">
-            <div class="cert-frame" onclick="openCert()">
-                <span class="cert-badge">NEW!</span>
-                <img src="assets/064c1a6861a9201965ea738461f7f29d.jpg" alt="人工智能训练师证书" loading="lazy">
-            </div>
-            <div class="cert-info">
-                <h3>▸ 证书详情</h3>
-                <dl>
-                    <dt>证书名称</dt>
-                    <dd>人工智能训练师（初级）</dd>
-                    <dt>颁发机构</dt>
-                    <dd>达摩院 · 机器智能技术事业部</dd>
-                    <dt>持证人</dt>
-                    <dd>贺智航</dd>
-                    <dt>证书编号</dt>
-                    <dd class="cert-number">AIT260711164657000184</dd>
-                    <dt>颁发日期</dt>
-                    <dd>2026 / 07 / 11</dd>
-                    <dt>有效期至</dt>
-                    <dd>2027 / 07 / 11</dd>
-                </dl>
-            </div>
-        </div>
-        </div>
-    </section>
-
-    <!-- 证书弹窗 -->
-    <div class="cert-overlay" id="certOverlay" onclick="closeCert()">
-        <span class="close-hint">[ 点击任意处关闭 ]</span>
-        <img src="assets/064c1a6861a9201965ea738461f7f29d.jpg" alt="证书大图">
+<!-- ============================================================
+     Hero
+     ============================================================ -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <div class="hero-text">
+      <span class="hero-eyebrow">EARTH ONLINE PLAYER</span>
+      <h1 class="hero-title">
+        贺智航<br>
+        <span class="accent">赫兹</span>
+      </h1>
+      <p class="hero-desc">
+        惠州 · 电子信息工程 · 大一<br>
+        在 AI 和代码之间摸索，在星露谷和瓦罗兰特之间横跳。
+      </p>
+      <div class="cta-row">
+        <a href="#about" class="cta-btn" data-magnet>
+          了解更多
+          <span class="cta-icon-circle"><i class="ti ti-arrow-down" style="font-size:0.9rem;"></i></span>
+        </a>
+        <a href="#contact" class="cta-btn-secondary" data-magnet>联系我</a>
+      </div>
     </div>
+    <div class="hero-visual">
+      <div class="hero-orb"></div>
+    </div>
+  </div>
+</section>
 
-    <!-- ================================================================
-         技能
-         ================================================================ -->
-    <section class="section fade-section" id="skills">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">⚔ 技 能 树 ⚔</h2>
-        <p class="section-subtitle">SKILL TREE</p>
+<!-- ============================================================
+     About — FluidGlass + Spotlight
+     ============================================================ -->
+<section class="section reveal" id="about">
+  <span class="section-label">ABOUT</span>
+  <h2 class="section-title">关于我</h2>
+  <p class="section-sub">一段碎碎念，帮你了解我。</p>
 
-        <div class="skills-grid">
-            <div class="skill-item">
-                <div class="skill-icon">🎯</div>
-                <div class="skill-name">美女经过时放倒兄弟</div>
-                <div class="skill-bar-wrap">
-                    <div class="skill-bar-fill" data-width="98"></div>
-                </div>
-                <div class="skill-percent">LV.98</div>
-            </div>
-            <div class="skill-item">
-                <div class="skill-icon">🌾</div>
-                <div class="skill-name">星露谷种田效率</div>
-                <div class="skill-bar-wrap">
-                    <div class="skill-bar-fill green" data-width="87"></div>
-                </div>
-                <div class="skill-percent">LV.87</div>
-            </div>
-            <div class="skill-item">
-                <div class="skill-icon">🔫</div>
-                <div class="skill-name">瓦罗兰特爆头率</div>
-                <div class="skill-bar-wrap">
-                    <div class="skill-bar-fill amber" data-width="42"></div>
-                </div>
-                <div class="skill-percent">LV.42</div>
-            </div>
-            <div class="skill-item">
-                <div class="skill-icon">🤖</div>
-                <div class="skill-name">AI Prompt 工程</div>
-                <div class="skill-bar-wrap">
-                    <div class="skill-bar-fill green" data-width="65"></div>
-                </div>
-                <div class="skill-percent">LV.65</div>
-            </div>
-            <div class="skill-item">
-                <div class="skill-icon">💤</div>
-                <div class="skill-name">熬夜不猝死抗性</div>
-                <div class="skill-bar-wrap">
-                    <div class="skill-bar-fill amber" data-width="73"></div>
-                </div>
-                <div class="skill-percent">LV.73</div>
-            </div>
-            <div class="skill-item">
-                <div class="skill-icon">🎵</div>
-                <div class="skill-name">小众音乐鉴赏力</div>
-                <div class="skill-bar-wrap">
-                    <div class="skill-bar-fill" data-width="91"></div>
-                </div>
-                <div class="skill-percent">LV.91</div>
-            </div>
+  <div class="float-card" data-float data-spotlight>
+    <div class="float-card-inner">
+      <div class="spotlight"></div>
+      <div class="float-shadow"></div>
+      <p class="about-text">
+      嘿，我是<span class="hl">贺智航</span>，也可以叫我<span class="hl">赫兹</span>。<br>
+      来自广东惠州，一个正在学习怎么跟 AI 打交道的普通人。<br>
+      业余时间不是在打瓦就是在星露谷里种地，希望有老乡跟我一起联机。<br>
+      最喜欢的歌手是 <span class="hl">YZH</span>，可能有些小众但他真的是宝藏rapper。
+    </p>
+    <div class="about-tags-row">
+      <span class="about-tag">Valorant</span>
+      <span class="about-tag">星露谷</span>
+      <span class="about-tag">AI 学习者</span>
+      <span class="about-tag">YZH</span>
+      <span class="about-tag">惠州</span>
+      <span class="about-tag">Hip-Hop</span>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Projects Bento — 每个卡片都 Spotlight
+     ============================================================ -->
+<section class="section reveal" id="projects">
+  <span class="section-label">PROJECTS</span>
+  <h2 class="section-title">我的项目</h2>
+  <p class="section-sub">正在做和已经做了的东西。</p>
+
+  <div class="bento">
+    <div class="bento-item tall">
+      <div class="float-card" data-float data-spotlight style="height:100%;">
+        <div class="float-card-inner" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
+          <div class="spotlight"></div>
+          <div class="float-shadow"></div>
+          <div style="font-size:2.5rem; margin-bottom:1rem;">🍵</div>
+        <h3 style="font-weight:700; font-size:1.25rem; margin-bottom:0.5rem; color:var(--heading);">中国茶全球表达</h3>
+        <p style="color:var(--text-dim); line-height:1.8;">拍一杯茶，让世界说得清、喝得懂。<br>AI 识茶 · 风味翻译 · 品鉴卡。</p>
+        <a href="https://lotus6619.github.io/tea-2.0/" target="_blank" rel="noopener" class="cta-btn-secondary" data-magnet style="margin-top:1.5rem; width:fit-content;">
+          访问网站
+          <span class="cta-icon-circle" style="width:1.6rem;height:1.6rem;background:var(--accent-glow);">
+            <i class="ti ti-arrow-up-right" style="font-size:0.75rem; color:var(--accent);"></i>
+          </span>
+        </a>
         </div>
-
-        <!-- 技能标签云 -->
-        <div class="tag-cloud">
-            <span>HTML</span><span>CSS</span><span>JavaScript</span>
-            <span>Valorant</span><span>Stardew Valley</span><span>AI 对话</span>
-            <span>广东话</span><span>普通话</span><span>熬夜</span>
-            <span>种田</span><span>FPS</span><span>RPG</span>
-            <span>YZH</span><span>Hip-Hop</span><span>惠普</span><span>干饭</span>
+      </div>
+    </div>
+    <div class="bento-item">
+      <div class="float-card" data-float data-spotlight style="height:100%;">
+        <div class="float-card-inner" style="height:100%; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+          <div class="spotlight"></div>
+          <div class="float-shadow"></div>
+          <img src="assets/证书.jpg" alt="AI训练师证书" style="width:100%; border-radius:12px; margin-bottom:0.75rem;" loading="lazy">
+          <h3 style="font-weight:700; font-size:1.1rem; color:var(--heading);">AI 训练师证书</h3>
+          <p style="color:var(--text-dim); font-size:0.8rem; margin-top:0.3rem;">达摩院 · 2026</p>
         </div>
-    </section>
-
-    <!-- ================================================================
-         项目
-         ================================================================ -->
-    <section class="section fade-section" id="projects">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">⚙ 我 的 项 目 ⚙</h2>
-        <p class="section-subtitle">PROJECTS</p>
-
-        <div class="project-card">
-            <div class="project-icon">🍵</div>
-            <div class="project-name">中国茶全球表达</div>
-            <p class="project-desc">
-                拍一杯茶，让世界说得清、喝得懂<br>AI 识茶 · 风味翻译 · 品鉴卡
-            </p>
-            <a href="https://lotus6619.github.io/tea-2.0/" target="_blank" rel="noopener" style="display:inline-block;margin-top:1.5rem;font-family:'Press Start 2P',monospace;font-size:0.55rem;color:var(--primary);text-decoration:none;border:2px solid var(--primary);padding:0.6rem 1rem;transition:all 0.3s;"
-               onmouseover="this.style.background='var(--primary)';this.style.color='#fff';"
-               onmouseout="this.style.background='transparent';this.style.color='var(--primary)';">
-                ▸ 访问网站
-            </a>
+      </div>
+    </div>
+    <div class="bento-item">
+      <div class="float-card" data-float data-spotlight style="height:100%;">
+        <div class="float-card-inner" style="height:100%; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+          <div class="spotlight"></div>
+          <div class="float-shadow"></div>
+          <div style="font-size:2rem; margin-bottom:0.75rem;">🔜</div>
+          <h3 style="font-weight:700; font-size:1.1rem; color:var(--heading);">更多项目</h3>
+          <p style="color:var(--text-dim); font-size:0.85rem; margin-top:0.3rem;">正在建设中</p>
         </div>
-    </section>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- ================================================================
-         专辑画廊
-         ================================================================ -->
-    <section class="section fade-section" id="gallery">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">💿 专 辑 画 廊 💿</h2>
-        <p class="section-subtitle">ALBUM GALLERY</p>
+<!-- ============================================================
+     Gallery
+     ============================================================ -->
+<section class="section reveal" id="gallery">
+  <span class="section-label">GALLERY</span>
+  <h2 class="section-title">专辑画廊</h2>
+  <p class="section-sub">3D 圆环 · 拖拽旋转 · 点击封面翻转</p>
 
-        <div class="gallery-scene" id="galleryScene">
-            <div class="gallery-stage" id="galleryStage">
-                <div class="gallery-disc"></div>
-            </div>
+  <div class="gallery-scene" id="galleryScene">
+    <div class="gallery-stage" id="galleryStage">
+      <div class="gallery-disc"></div>
+    </div>
+  </div>
+
+  <div class="gallery-controls">
+    <button class="gallery-btn" id="btnPrev">◀</button>
+    <button class="gallery-btn" id="btnAuto">⏯ 自动</button>
+    <button class="gallery-btn" id="btnNext">▶</button>
+  </div>
+  <p class="gallery-hint">🖱 拖拽旋转 &nbsp;|&nbsp; 👆 点击翻转查看详情</p>
+  <div class="album-dot-nav" id="albumDots"></div>
+</section>
+
+<!-- ============================================================
+     Contact
+     ============================================================ -->
+<section class="section reveal" id="contact">
+  <span class="section-label">CONTACT</span>
+  <h2 class="section-title">联系我</h2>
+  <p class="section-sub">下面这些地方也许能找到我。</p>
+
+  <div class="float-card" data-float data-spotlight style="max-width:480px;">
+    <div class="float-card-inner" style="text-align:center;">
+      <div class="spotlight"></div>
+      <div class="float-shadow"></div>
+      <div style="display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;">
+      <a href="https://github.com/lotus6619" target="_blank" rel="noopener" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-github" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-bilibili" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-music" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-discord" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" onclick="navigator.clipboard.writeText('hzh15016056652');alert('已复制');return false;" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-wechat" style="font-size:1.2rem;"></i>
+      </a>
+    </div>
+    <p style="color:var(--text-dim); font-size:0.8rem; margin-top:1rem;">微信: hzh15016056652</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Guestbook
+     ============================================================ -->
+<section class="section reveal" id="guestbook">
+  <span class="section-label">GUESTBOOK</span>
+  <h2 class="section-title">访客留言</h2>
+  <p class="section-sub">说点什么吧。</p>
+
+  <div class="float-card" data-float data-spotlight>
+    <div class="float-card-inner">
+      <div class="spotlight"></div>
+      <div class="float-shadow"></div>
+      <form class="gb-form" id="gbForm" autocomplete="off">
+        <div class="gb-row">
+          <input class="gb-input" name="name" placeholder="昵称" maxlength="20" required>
+          <input class="gb-input" name="email" placeholder="邮箱（选填）" maxlength="50">
         </div>
+        <textarea class="gb-textarea" name="msg" placeholder="说点什么..." maxlength="300" required></textarea>
+        <button type="submit" class="gb-submit">发送</button>
+      </form>
+      <div class="gb-msgs" id="gbMsgs"></div>
+    </div>
+  </div>
+</section>
 
-        <div class="gallery-controls">
-            <button class="gallery-btn" id="btnPrev">◀ 左转</button>
-            <button class="gallery-btn" id="btnAuto">⏯ 自动</button>
-            <button class="gallery-btn" id="btnNext">右转 ▶</button>
-        </div>
-        <p class="gallery-hint">🖱 拖拽旋转 &nbsp;|&nbsp; 👆 点击封面翻转查看详情</p>
-        <div class="album-dot-nav" id="albumDots"></div>
-    </section>
+<footer class="footer">
+  <p>© 2026 赫兹 HERTZ · Made in Huizhou</p>
+</footer>
 
-    <!-- ================================================================
-         联系方式
-         ================================================================ -->
-    <section class="section fade-section" id="contact">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">✉ 联 系 我 ✉</h2>
-        <p class="section-subtitle">CONTACT</p>
+</div><!-- end perspective-wrapper -->
+</div><!-- end phone-frame -->
 
-        <div class="contact-card">
-            <p style="font-size:1.1rem;">想知道怎么联系我？</p>
-            <div class="contact-price">
-                ▸ 这 是 另 外 的 价 钱 ◂
-            </div>
-            <p style="color:var(--text-sub);font-size:0.85rem;">
-                不过既然你看到这里了……<br>下面这些地方也许能找到我 👇
-            </p>
-            <div class="contact-links">
-                <a href="https://github.com/lotus6619" target="_blank" rel="noopener" title="GitHub"><i class="fab fa-github"></i></a>
-                <a href="#" title="Bilibili"><i class="fab fa-bilibili"></i></a>
-                <a href="#" title="网易云音乐"><i class="fas fa-music"></i></a>
-                <a href="#" title="Discord"><i class="fab fa-discord"></i></a>
-                <a href="#" title="微信: hzh15016056652" onclick="navigator.clipboard.writeText('hzh15016056652');alert('微信号已复制：hzh15016056652');return false;"><i class="fab fa-weixin"></i></a>
-            </div>
-            <p style="text-align:center;color:var(--text-sub);font-size:0.75rem;margin-top:0.75rem;font-family:'JetBrains Mono',monospace;">
-                微信: hzh15016056652
-            </p>
-        </div>
-    </section>
+<!-- ============================================================
+     Lenis Smooth Scroll
+     ============================================================ -->
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 
-    <!-- ================================================================
-         访客留言板
-         ================================================================ -->
-    <section class="section fade-section" id="guestbook">
-        <div class="pixel-divider"></div>
-        <h2 class="section-title">💬 访 客 留 言 💬</h2>
-        <p class="section-subtitle">GUEST BOOK</p>
+<script>
+(function() {
+  'use strict';
 
-        <div class="guestbook">
-            <form class="gb-form" id="gbForm" autocomplete="off">
-                <div class="gb-row">
-                    <input class="gb-input" name="name" placeholder="你的昵称" maxlength="20" required>
-                    <input class="gb-input" name="email" placeholder="邮箱（选填）" maxlength="50">
-                </div>
-                <textarea class="gb-textarea" name="msg" placeholder="说点什么吧..." maxlength="300" required></textarea>
-                <button type="submit" class="gb-submit">▸ 发 送</button>
-            </form>
-            <div class="gb-messages" id="gbMessages"></div>
-        </div>
-    </section>
+  // ======================== Lenis ========================
+  const lenis = new Lenis({ lerp: 0.05, wheelMultiplier: 0.7, smoothTouch: false });
+  function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
 
-    <!-- ================================================================
-         页脚
-         ================================================================ -->
-    <footer class="footer">
-        <p>© 2026 赫兹 HERTZ</p>
-        <p style="margin-top:0.5rem;">
-            Made with <span class="pixel-heart">❤</span> in Huizhou
-        </p>
-        <p style="font-size:0.6rem;margin-top:0.75rem;opacity:0.5;">
-            PLAYER_001 // EARTH_ONLINE // SINCE_????//
-        </p>
-    </footer>
+  // ======================== Starfield ========================
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = window.innerWidth < 768;
+  const STAR_COUNT = isMobile ? 50 : 100;
+  let stars = [];
+  let animId;
 
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
 
-    <!-- ================================================================
-         JavaScript 交互逻辑
-         ================================================================ -->
-    <script>
-    (function() {
-        'use strict';
+  class Star {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 1.5 + 0.3;
+      this.baseAlpha = Math.random() * 0.45 + 0.12;
+      this.alpha = this.baseAlpha;
+      this.twinkleSpeed = Math.random() * 0.015 + 0.004;
+      this.twinkleOffset = Math.random() * Math.PI * 2;
+      this.driftX = (Math.random() - 0.5) * 0.06;
+      this.driftY = (Math.random() - 0.5) * 0.06;
+    }
+    update() {
+      this.x += this.driftX;
+      this.y += this.driftY;
+      if (this.x < -5) this.x = canvas.width + 5;
+      if (this.x > canvas.width + 5) this.x = -5;
+      if (this.y < -5) this.y = canvas.height + 5;
+      if (this.y > canvas.height + 5) this.y = -5;
+      this.alpha = this.baseAlpha + Math.sin(Date.now() * this.twinkleSpeed + this.twinkleOffset) * 0.18;
+      this.alpha = Math.max(0.04, Math.min(0.65, this.alpha));
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(16,185,129,${this.alpha})`;
+      ctx.fill();
+    }
+  }
 
-        // ======================== 1. 主题切换 ========================
-        const html = document.documentElement;
-        const themeToggle = document.getElementById('themeToggle');
+  for (let i = 0; i < STAR_COUNT; i++) stars.push(new Star());
 
-        // 读取本地存储的主题偏好
-        const savedTheme = localStorage.getItem('hz-theme');
-        if (savedTheme) {
-            html.setAttribute('data-theme', savedTheme);
-        } else {
-            // 默认跟随系统
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  function animateStarfield() {
+    if (isReduced) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => { s.update(); s.draw(); });
+    animId = requestAnimationFrame(animateStarfield);
+  }
+  animateStarfield();
+
+  // ======================== Touch Ripple — DOM 墨绿涟漪 ========================
+  const rippleContainer = document.createElement('div');
+  rippleContainer.style.cssText = 'position:fixed;inset:0;z-index:50;pointer-events:none;';
+  document.body.appendChild(rippleContainer);
+
+  function spawnRipple(x, y) {
+    // 3 concentric layers
+    const layers = [
+      { w:18, border:'1px solid rgba(16,185,129,0.5)', bg:'radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 60%)', dur:0.8 },
+      { w:28, border:'0.8px solid rgba(16,185,129,0.3)', bg:'transparent', dur:1.0 },
+    ];
+
+    layers.forEach(l => {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position:fixed; left:${x}px; top:${y}px;
+        width:${l.w}px; height:${l.w}px; border-radius:50%;
+        border:${l.border}; background:${l.bg};
+        animation:rippleExpand ${l.dur}s cubic-bezier(0.32,0.72,0,1) forwards;
+        pointer-events:none;
+      `;
+      rippleContainer.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    });
+
+    // Cleanup old ripples
+    while (rippleContainer.children.length > 40) rippleContainer.firstChild.remove();
+  }
+
+  document.addEventListener('touchstart', (e) => {
+    Array.from(e.touches).forEach(t => spawnRipple(t.clientX, t.clientY));
+  }, { passive: true });
+  document.addEventListener('click', (e) => { spawnRipple(e.clientX, e.clientY); });
+
+  // ======================== 3D Album Gallery ========================
+  const galleryAlbums = [
+    {file:'assets/albums/陈一豪-鼻塞.jpg', artist:'陈一豪', title:'鼻塞'},
+    {file:'assets/albums/陈粒-走马.jpg', artist:'陈粒', title:'走马'},
+    {file:'assets/albums/陈粒-美丽海.jpg', artist:'陈粒', title:'美丽海'},
+    {file:'assets/albums/等一下就回家-瀑布.jpg', artist:'等一下就回家', title:'瀑布'},
+    {file:'assets/albums/河南说唱之神-工厂.jpg', artist:'河南说唱之神', title:'工厂'},
+    {file:'assets/albums/华云龙-台北一夜.jpg', artist:'华云龙', title:'台北一夜'},
+    {file:'assets/albums/黄旭-旅行家的忠诚.jpg', artist:'黄旭', title:'旅行家的忠诚'},
+    {file:'assets/albums/李荣浩-哎呀.jpg', artist:'李荣浩', title:'哎呀'},
+    {file:'assets/albums/李荣浩-恋人.jpg', artist:'李荣浩', title:'恋人'},
+    {file:'assets/albums/李荣浩，张惠妹-对等关系.jpg', artist:'李荣浩,张惠妹', title:'对等关系'},
+    {file:'assets/albums/马思维-house music.jpg', artist:'马思维', title:'house music'},
+    {file:'assets/albums/马思维-崂山道士.jpg', artist:'马思维', title:'崂山道士'},
+    {file:'assets/albums/盆栽-die for you.jpg', artist:'盆栽', title:'die for you'},
+    {file:'assets/albums/汤令山-玻璃.jpg', artist:'汤令山', title:'玻璃'},
+    {file:'assets/albums/王以太，艾热-别怕变老.jpg', artist:'王以太,艾热', title:'别怕变老'},
+    {file:'assets/albums/王以太，艾热-周旋.jpg', artist:'王以太,艾热', title:'周旋'},
+    {file:'assets/albums/shark-all right.jpg', artist:'shark', title:'all right'},
+    {file:'assets/albums/Vinz-T 杨过 (1).jpg', artist:'Vinz-T', title:'杨过'},
+    {file:'assets/albums/JVKE-golden hour.jpg', artist:'JVKE', title:'golden hour'},
+    {file:'assets/albums/JVKE-her.jpg', artist:'JVKE', title:'her'},
+    {file:'assets/albums/JVKE-pretty.jpg', artist:'JVKE', title:'pretty'},
+    {file:'assets/albums/JVKE-this is what winter feels like.jpg', artist:'JVKE', title:'this is what winter feels like'},
+    {file:'assets/albums/Post Malone-sunflowers.jpg', artist:'Post Malone', title:'sunflowers'},
+    {file:'assets/albums/yzh-一叶知秋.jpg', artist:'YZH', title:'一叶知秋'},
+    {file:'assets/albums/yzh-墨梅.jpg', artist:'YZH', title:'墨梅'},
+    {file:'assets/albums/yzh-巴陵戏.jpg', artist:'YZH', title:'巴陵戏'},
+    {file:'assets/albums/yzh-插叙人生.jpg', artist:'YZH', title:'插叙人生'},
+    {file:'assets/albums/yzh-无边记.jpg', artist:'YZH', title:'无边记'},
+    {file:'assets/albums/yzh-月亮河.jpg', artist:'YZH', title:'月亮河'},
+    {file:'assets/albums/yzh-醒.jpg', artist:'YZH', title:'醒'},
+  ];
+
+  const gStage = document.getElementById('galleryStage');
+  const gScene = document.getElementById('galleryScene');
+  const gDots  = document.getElementById('albumDots');
+  let gAngle = 0, gDragging = false, gWasDrag = false, gStartX = 0, gAuto = true, gAnimId;
+  let gPausedByFlip = false; // 翻转导致的暂停
+
+  function updateGTransform() {
+    gStage.style.transform = 'rotate(-15deg) rotateY(' + gAngle + 'deg)';
+  }
+  updateGTransform();
+
+  function buildRing() {
+    gStage.querySelectorAll('.album-slot').forEach(s => s.remove());
+    gDots.innerHTML = '';
+    const n = galleryAlbums.length;
+    const radius = Math.max(260, n * 11);
+
+    galleryAlbums.forEach((alb, i) => {
+      const angle = (360 / n) * i;
+      const slot = document.createElement('div');
+      slot.className = 'album-slot';
+      slot.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + radius + 'px)';
+      slot.innerHTML = '<div class="album-face album-face-front"><img src="' + alb.file + '" alt="' + alb.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<span style=font-size:0.6rem;color:var(--text-dim)>NO IMG</span>\'"></div><div class="album-face album-face-back"><div class="alb-artist">' + alb.artist + '</div><div class="alb-title">' + alb.title + '</div></div>';
+      slot.addEventListener('click', function(e) {
+        if (gWasDrag) return;
+        slot.classList.toggle('flipped');
+        // 检查是否有卡片处于翻转状态
+        const anyFlipped = gStage.querySelectorAll('.album-slot.flipped').length > 0;
+        if (anyFlipped && gAuto) {
+          gAuto = false;
+          gPausedByFlip = true;
+        } else if (!anyFlipped && gPausedByFlip) {
+          gAuto = true;
+          gPausedByFlip = false;
         }
+      });
+      gStage.appendChild(slot);
 
-        function updateThemeIcon() {
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            themeToggle.innerHTML = isDark ? '☀️' : '🌙';
-        }
-        updateThemeIcon();
+      const dot = document.createElement('span');
+      dot.className = 'album-dot';
+      dot.title = alb.artist + ' - ' + alb.title;
+      dot.addEventListener('click', (function(a) { return function() { snapToAngle(-a); }; })(angle));
+      gDots.appendChild(dot);
+    });
+  }
+  buildRing();
 
-        themeToggle.addEventListener('click', () => {
-            const current = html.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            localStorage.setItem('hz-theme', next);
-            updateThemeIcon();
+  // Drag only on album covers — use event delegation
+  gStage.addEventListener('mousedown', function(e) {
+    if (!e.target.closest('.album-slot')) return;
+    gDragging = true; gWasDrag = false; gStartX = e.clientX; gStage.classList.add('dragging');
+  });
+  gStage.addEventListener('touchstart', function(e) {
+    if (!e.target.closest('.album-slot')) return;
+    gDragging = true; gWasDrag = false; gStartX = e.touches[0].clientX; gStage.classList.add('dragging');
+  }, { passive: true });
+  window.addEventListener('mousemove', function(e) {
+    if (!gDragging) return;
+    const dx = e.clientX - gStartX;
+    if (Math.abs(dx) > 3) { gWasDrag = true; gAuto = false; gPausedByFlip = false; }
+    gAngle += dx * 0.5; updateGTransform(); gStartX = e.clientX;
+  });
+  window.addEventListener('mouseup', function() { if (gDragging) { setTimeout(function() { gWasDrag = false; }, 50); gStage.classList.remove('dragging'); gDragging = false; } });
+  window.addEventListener('touchmove', function(e) {
+    if (!gDragging) return;
+    const dx = e.touches[0].clientX - gStartX;
+    if (Math.abs(dx) > 3) { gWasDrag = true; gAuto = false; gPausedByFlip = false; }
+    gAngle += dx * 0.5; updateGTransform(); gStartX = e.touches[0].clientX;
+  }, { passive: true });
+  window.addEventListener('touchend', function() { if (gDragging) { setTimeout(function() { gWasDrag = false; }, 50); gStage.classList.remove('dragging'); gDragging = false; } });
 
-            // 切换粒子颜色
-            if (current === 'dark') {
-                particleColors = ['#60a5fa', '#34d399', '#fbbf24', '#fff'];
-            } else {
-                particleColors = ['#2563eb', '#10b981', '#f59e0b', '#fff'];
-            }
-        });
+  function snapToAngle(ta) { gAngle = ta; updateGTransform(); gAuto = false; updateActiveDot(); }
+  function updateActiveDot() {
+    const n = galleryAlbums.length, seg = 360 / n;
+    let idx = Math.round(((gAngle % 360) + 360) % 360 / seg) % n;
+    idx = (n - idx) % n;
+    const dots = gDots.querySelectorAll('.album-dot');
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+  }
+  function autoSpin() {
+    if (gAuto && !gDragging) { gAngle -= 0.12; updateGTransform(); updateActiveDot(); }
+    gAnimId = requestAnimationFrame(autoSpin);
+  }
+  autoSpin();
 
-        // ======================== 2. 逐字打印动画 ========================
-        const typewriterEl = document.getElementById('typewriter');
-        const phrases = [
-            '地球online玩家',
-            'Stardew Valley 中毒者',
-            'YZH 的野生听众',
-            '瓦罗兰特混子',
-            '惠州本地人',
-            'AI 练习生',
-        ];
-        let phraseIdx = 0;
-        let charIdx = 0;
-        let isDeleting = false;
-        let typeSpeed = 120;
+  document.getElementById('btnPrev').addEventListener('click', function() { gAuto = false; gPausedByFlip = false; gAngle += 360 / galleryAlbums.length; updateGTransform(); updateActiveDot(); });
+  document.getElementById('btnNext').addEventListener('click', function() { gAuto = false; gPausedByFlip = false; gAngle -= 360 / galleryAlbums.length; updateGTransform(); updateActiveDot(); });
+  document.getElementById('btnAuto').addEventListener('click', function() { gAuto = !gAuto; gPausedByFlip = false; this.textContent = gAuto ? '⏯ 自动' : '▶ 自动'; });
 
-        function typeLoop() {
-            const current = phrases[phraseIdx];
+  // ======================== Guestbook ========================
+  const GB_KEY = 'hz-guestbook-v2';
+  function loadMsgs() { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch(e) { return []; } }
+  function saveMsgs(msgs) { localStorage.setItem(GB_KEY, JSON.stringify(msgs)); }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function renderMsgs() {
+    const msgs = loadMsgs();
+    const container = document.getElementById('gbMsgs');
+    if (!msgs.length) { container.innerHTML = '<div class="gb-empty">还没有留言，来做第一个吧 ✨</div>'; return; }
+    container.innerHTML = msgs.slice().reverse().map(m =>
+      '<div class="gb-msg"><div class="msg-head"><span class="msg-name">' + esc(m.name) + '</span><span class="msg-time">' + esc(m.time) + '</span></div><div class="msg-body">' + esc(m.msg) + '</div></div>'
+    ).join('');
+  }
+  document.getElementById('gbForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = fd.get('name').trim();
+    const msg = fd.get('msg').trim();
+    if (!name || !msg) return;
+    const msgs = loadMsgs();
+    const now = new Date();
+    const ts = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    msgs.push({ name, msg, time: ts });
+    if (msgs.length > 50) msgs.shift();
+    saveMsgs(msgs); renderMsgs(); e.target.reset();
+  });
+  renderMsgs();
 
-            if (!isDeleting) {
-                typewriterEl.textContent = current.slice(0, charIdx + 1);
-                charIdx++;
-                if (charIdx === current.length) {
-                    // 打完，停顿 2 秒再删
-                    typeSpeed = 2000;
-                    isDeleting = true;
-                } else {
-                    typeSpeed = 100 + Math.random() * 80;
-                }
-            } else {
-                typewriterEl.textContent = current.slice(0, charIdx - 1);
-                charIdx--;
-                if (charIdx === 0) {
-                    isDeleting = false;
-                    phraseIdx = (phraseIdx + 1) % phrases.length;
-                    typeSpeed = 300;
-                } else {
-                    typeSpeed = 40 + Math.random() * 40;
-                }
-            }
-            setTimeout(typeLoop, typeSpeed);
-        }
-        // 初始稍微延迟
-        setTimeout(typeLoop, 600);
+  // ======================== Theme ========================
+  const html = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('hz-theme-v2');
+  if (saved) html.setAttribute('data-theme', saved);
+  function updateIcon() {
+    themeToggle.textContent = html.getAttribute('data-theme') === 'dark' ? '☀' : '☾';
+  }
+  updateIcon();
+  themeToggle.addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('hz-theme-v2', next);
+    updateIcon();
+  });
 
-        // ======================== 3. 粒子画布（跟随鼠标视差） ========================
-        const canvas = document.getElementById('heroCanvas');
-        const ctx = canvas.getContext('2d');
-        let particleColors = ['#2563eb', '#10b981', '#f59e0b', '#fff'];
-        let particles = [];
-        const PARTICLE_COUNT = 80;
-        let mouseX = -999;
-        let mouseY = -999;
-        let animFrame;
+  // ======================== Mobile Nav ========================
+  const hamburger = document.getElementById('hamburger');
+  const overlay = document.getElementById('navOverlay');
+  let menuOpen = false;
+  function openMenu() {
+    menuOpen = true;
+    overlay.classList.add('open');
+    lenis.stop();
+    const spans = hamburger.querySelectorAll('span');
+    spans[0].style.transform = 'rotate(45deg) translate(5px,5px)';
+    spans[1].style.opacity = '0';
+    spans[2].style.transform = 'rotate(-45deg) translate(5px,-5px)';
+  }
+  function closeMenu() {
+    menuOpen = false;
+    overlay.classList.remove('open');
+    lenis.start();
+    const spans = hamburger.querySelectorAll('span');
+    spans[0].style.transform = '';
+    spans[1].style.opacity = '';
+    spans[2].style.transform = '';
+  }
+  hamburger.addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeMenu(); });
+  overlay.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen) closeMenu(); });
 
-        function resizeCanvas() {
-            const hero = document.querySelector('.hero');
-            canvas.width = hero.offsetWidth;
-            canvas.height = hero.offsetHeight;
-        }
+  // ======================== SpotlightCard ========================
+  document.querySelectorAll('[data-spotlight]').forEach(card => {
+    const inner = card.classList.contains('float-card') ? card.querySelector('.float-card-inner') : card;
+    const spot = inner ? inner.querySelector('.spotlight') : card.querySelector('.spotlight');
+    if (!spot) return;
+    const target = inner || card;
+    target.addEventListener('mousemove', (e) => {
+      const rect = target.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      spot.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(16,185,129,0.14) 0%, transparent 60%)`;
+    });
+    target.addEventListener('mouseleave', () => {
+      spot.style.background = '';
+    });
+  });
 
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 4 + 1.5;
-                this.speedX = (Math.random() - 0.5) * 0.6;
-                this.speedY = (Math.random() - 0.5) * 0.6;
-                this.color = particleColors[Math.floor(Math.random() * particleColors.length)];
-                this.opacity = Math.random() * 0.6 + 0.3;
-                this.angle = Math.random() * Math.PI * 2;
-            }
-            update(mx, my) {
-                // 鼠标引力（视差效果）
-                if (mx > -999 && my > -999) {
-                    const dx = mx - this.x;
-                    const dy = my - this.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 200) {
-                        const force = (200 - dist) / 200 * 0.03;
-                        this.speedX += dx * force * 0.01;
-                        this.speedY += dy * force * 0.01;
-                    }
-                }
-                // 阻尼
-                this.speedX *= 0.999;
-                this.speedY *= 0.999;
-                // 限速
-                const spd = Math.sqrt(this.speedX ** 2 + this.speedY ** 2);
-                if (spd > 2) {
-                    this.speedX = (this.speedX / spd) * 2;
-                    this.speedY = (this.speedY / spd) * 2;
-                }
+  // ======================== Ring Carousel — 圆柱回环 ========================
+  const ringCards = document.querySelectorAll('[data-float]');
+  const RING_R = 420; // 环半径（越小曲线越明显）
 
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.angle += 0.01;
+  function updateRing() {
+    const vh = window.innerHeight;
+    const scrollY = window.scrollY;
 
-                // 边界环绕
-                if (this.x < -20) this.x = canvas.width + 20;
-                if (this.x > canvas.width + 20) this.x = -20;
-                if (this.y < -20) this.y = canvas.height + 20;
-                if (this.y > canvas.height + 20) this.y = -20;
-            }
-            draw(ctx) {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
-                // 方形粒子（像素感）
-                ctx.fillRect(
-                    Math.round(this.x - this.size / 2),
-                    Math.round(this.y - this.size / 2),
-                    Math.round(this.size),
-                    Math.round(this.size)
-                );
-                ctx.restore();
-            }
-        }
+    ringCards.forEach((card, idx) => {
+      const inner = card.querySelector('.float-card-inner');
+      const shadow = card.querySelector('.float-shadow');
+      if (!inner) return;
 
-        function initParticles() {
-            resizeCanvas();
-            particles = [];
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                particles.push(new Particle());
-            }
-        }
+      const rect = card.getBoundingClientRect();
+      const cardWorldY = rect.top + scrollY + rect.height / 2;
+      const ringRot = scrollY / RING_R;
+      const cardAngle = cardWorldY / RING_R;
+      const relAngle = cardAngle - ringRot - (vh / 2) / RING_R;
 
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.update(mouseX, mouseY);
-                p.draw(ctx);
-            });
-            // 画连线（近距离粒子之间）
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        ctx.save();
-                        ctx.globalAlpha = (100 - dist) / 100 * 0.12;
-                        ctx.strokeStyle = particles[i].color;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                        ctx.restore();
-                    }
-                }
-            }
-            animFrame = requestAnimationFrame(animateParticles);
-        }
+      // Visible range ±55°
+      const absAngle = Math.abs(relAngle);
+      if (absAngle > 0.96) {
+        card.style.opacity = '0';
+        card.style.pointerEvents = 'none';
+        return;
+      }
 
-        document.querySelector('.hero').addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
-        });
-        document.querySelector('.hero').addEventListener('mouseleave', () => {
-            mouseX = canvas.width / 2;
-            mouseY = canvas.height / 2;
-        });
+      const deg = relAngle * (180 / Math.PI);
+      const fade = Math.cos(relAngle); // smooth cosine fade
 
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-        });
+      card.style.opacity = fade;
+      card.style.pointerEvents = fade > 0.4 ? 'auto' : 'none';
 
-        // 初始化画布
-        mouseX = canvas.width / 2;
-        mouseY = canvas.height / 2;
-        initParticles();
-        animateParticles();
+      // Full curve rotation + shallow depth (0-40px, never overlaps)
+      inner.style.transform = `rotateX(${deg}deg) translateZ(${40 * fade}px)`;
 
-        // ======================== 4. 滚动淡入动画（Intersection Observer） ========================
-        const fadeSections = document.querySelectorAll('.fade-section');
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px 0px -60px 0px',
-            threshold: 0.15,
-        };
+      if (shadow) {
+        shadow.style.opacity = fade * 0.1;
+        shadow.style.bottom = `${-3 - fade * 10}px`;
+        shadow.style.filter = `blur(${5 + fade * 12}px)`;
+      }
+    });
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    // 触发技能条动画
-                    const bars = entry.target.querySelectorAll('.skill-bar-fill');
-                    bars.forEach(bar => {
-                        const w = bar.dataset.width;
-                        if (w) {
-                            setTimeout(() => { bar.style.width = w + '%'; }, 200);
-                        }
-                    });
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
+    requestAnimationFrame(updateRing);
+  }
+  requestAnimationFrame(updateRing);
 
-        fadeSections.forEach(section => observer.observe(section));
+  // ======================== Magnet ========================
+  document.querySelectorAll('[data-magnet]').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) * 0.18;
+      const dy = (e.clientY - cy) * 0.18;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = '';
+    });
+  });
 
-        // ======================== 5. 移动端汉堡菜单 ========================
-        const hamburger = document.getElementById('hamburger');
-        const navLinks = document.getElementById('navLinks');
-        const navOverlay = document.getElementById('navOverlay');
+  // ======================== BlurText Scroll Reveal ========================
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+  reveals.forEach(el => obs.observe(el));
 
-        function closeMenu() {
-            hamburger.classList.remove('open');
-            navLinks.classList.remove('open');
-            navOverlay.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        hamburger.addEventListener('click', () => {
-            const isOpen = navLinks.classList.contains('open');
-            if (isOpen) {
-                closeMenu();
-            } else {
-                hamburger.classList.add('open');
-                navLinks.classList.add('open');
-                navOverlay.classList.add('show');
-                document.body.style.overflow = 'hidden';
-            }
-        });
-
-        navOverlay.addEventListener('click', closeMenu);
-
-        // 点击导航链接后关闭菜单
-        navLinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                if (navLinks.classList.contains('open')) {
-                    closeMenu();
-                }
-            });
-        });
-
-        // ======================== 6. 键盘快捷键 ========================
-        document.addEventListener('keydown', (e) => {
-            // 按 T 切换主题
-            if (e.key === 't' && !e.ctrlKey && !e.metaKey && document.activeElement === document.body) {
-                themeToggle.click();
-            }
-        });
-
-        console.log('%c ⚿ 赫兹 HERTZ — 地球online玩家 %c ⚿',
-            'color:#2563eb;font-size:1.2em;',
-            'color:#10b981;');
-        console.log('%c 🎮 欢迎来到我的世界！按 T 键切换昼夜模式',
-            'color:#888;');
-        console.log('%c 💡 试试移动鼠标到首屏大图看看粒子效果~',
-            'color:#888;');
-
-        // ==================== 7. 新板块初始化（证书+画廊+留言） ====================
-        try {
-
-        // --- 证书弹窗 ---
-        window.openCert = function(){
-            document.getElementById('certOverlay').classList.add('show');
-            document.body.style.overflow='hidden';
-        };
-        window.closeCert = function(){
-            document.getElementById('certOverlay').classList.remove('show');
-            document.body.style.overflow='';
-        };
-        document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCert();});
-
-        // ==================== 8. 3D 专辑画廊 ====================
-        const albums = [
-            {file:'assets/0ddb5915e82b43f3f4388a0d1d5945dc.jpg', artist:'Vince Staples', title:'Big Fish Theory', year:'2017'},
-            {file:'assets/174a911bec1b3752d6805a1572470345.jpg', artist:'The Chemical Brothers', title:'Born in the Echoes', year:'2015'},
-            {file:'assets/1b491d17ea8d165f9d0f47f3a60ead6e.jpg', artist:'王一珩', title:'郑州', year:'2023'},
-            {file:'assets/24898b2d5751bfe0a26aa1719c18f22f.jpg', artist:'Y.Z.H', title:'醒', year:'2024'},
-            {file:'assets/2b4cdfb2833fba3561032fc316317c40.jpg', artist:'Y.Z.H', title:'墨梅', year:'2024'},
-            {file:'assets/38e42367eeea096a11bb7fe223e9ad7a.jpg', artist:'许嵩', title:'呼吸之野', year:'2021'},
-            {file:'assets/39815c887377ec3bf368c927c7367cdb.jpg', artist:'窦唯', title:'山河水', year:'1998'},
-            {file:'assets/3a12a022f5644056171b8e5c09670bff.jpg', artist:'The Weeknd', title:'Beauty Behind the Madness', year:'2015'},
-            {file:'assets/3a2506e7087eb15e6fba7b8b13bc4f7e.jpg', artist:'SHARK', title:'THE GLOOMY GLADIATOR', year:'2024'},
-            {file:'assets/498e681f48bf1bd4b6deb9d6c0201a67.jpg', artist:'李荣浩', title:'黑马', year:'2022'},
-            {file:'assets/4a00e28651d2a03ccd46ed86057004c5.jpg', artist:'IU', title:'Love Poem', year:'2019'},
-            {file:'assets/54f464f08a81eaf70898e44ae3e8e73b.jpg', artist:'王以太 & 艾热', title:'太热爱', year:'2023'},
-            {file:'assets/596d230e286019170247e2b04201e8b4.jpg', artist:'都市醉汉', title:'春日随笔', year:'2024'},
-            {file:'assets/651d0446e5ba5aebf3a10250b3fad53b.jpg', artist:'李荣浩', title:'纵横四海', year:'2022'},
-            {file:'assets/6b1809bdc8f4b49f7cd652f3ec946456.jpg', artist:'Tory Lanez', title:'Alone at Prom', year:'2021'},
-            {file:'assets/80cb57c5241d68368032082aa50e6e04.jpg', artist:'陈粒', title:'水纹', year:'2024'},
-            {file:'assets/97b845a37ce9b9e91a4e96c51d031fc4.jpg', artist:'The Weeknd', title:'Starboy', year:'2016'},
-            {file:'assets/de90cba42c2838bac13f96ca4796f5be.jpg', artist:'马思唯', title:'黑马季节', year:'2023'},
-            {file:'assets/eb9e95e6de47ad362939084399771048.jpg', artist:'王以太 & 艾热', title:'幸存者的负罪感', year:'2021'},
-            {file:'assets/f45cdf44fd9f68e45c8ab7cd8d2b99e0.jpg', artist:'马思唯', title:'黑马', year:'2021'},
-        ];
-
-        const stage = document.getElementById('galleryStage');
-        const galleryScene = document.getElementById('galleryScene');
-        const albumDots = document.getElementById('albumDots');
-        let isDragging=false, startX=0, currentAngle=0, autoRotate=true, galleryAnimId;
-        let wasDragging=false;
-
-        function updateTransform(){
-            stage.style.transform = 'rotate(-15deg) rotateY('+currentAngle+'deg)';
-        }
-        updateTransform();
-
-        function buildRing(){
-            stage.querySelectorAll('.album-slot').forEach(function(s){s.remove();});
-            albumDots.innerHTML='';
-            var n = albums.length;
-            var radius = Math.max(420, n * 20);
-
-            albums.forEach(function(alb,i){
-                var angle = (360/n)*i;
-                var slot = document.createElement('div');
-                slot.className='album-slot';
-                slot.style.transform = 'rotateY('+angle+'deg) translateZ('+radius+'px)';
-                slot.innerHTML = '<div class="album-face album-face-front"><img src="'+alb.file+'" alt="'+alb.title+'" loading="lazy" onerror="this.parentElement.innerHTML=\'<span style=font-family:Press+Start+2P;font-size:0.35rem;color:var(--text-sub)>NO<BR>IMG</span>\'"></div><div class="album-face album-face-back"><div class="alb-artist">'+alb.artist+'</div><div class="alb-title">'+alb.title+'</div><div class="alb-year">'+alb.year+'</div></div>';
-                slot.addEventListener('click',function(e){
-                    if(!wasDragging){slot.classList.toggle('flipped');}
-                });
-                stage.appendChild(slot);
-
-                var dot = document.createElement('span');
-                dot.className='album-dot';
-                dot.title = alb.artist+' - '+alb.title;
-                dot.addEventListener('click',(function(a){return function(){snapToAngle(-a);};})(angle));
-                albumDots.appendChild(dot);
-            });
-        }
-        buildRing();
-
-        galleryScene.addEventListener('mousedown',function(e){
-            isDragging=true;wasDragging=false;startX=e.clientX;
-            stage.classList.add('dragging');autoRotate=false;
-        });
-        window.addEventListener('mousemove',function(e){
-            if(!isDragging)return;
-            var dx=e.clientX-startX;
-            if(Math.abs(dx)>3)wasDragging=true;
-            currentAngle+=dx*0.5;updateTransform();startX=e.clientX;
-        });
-        window.addEventListener('mouseup',function(){
-            if(isDragging){setTimeout(function(){wasDragging=false;},50);stage.classList.remove('dragging');isDragging=false;}
-        });
-        galleryScene.addEventListener('touchstart',function(e){
-            isDragging=true;wasDragging=false;startX=e.touches[0].clientX;
-            stage.classList.add('dragging');autoRotate=false;
-        },{passive:true});
-        window.addEventListener('touchmove',function(e){
-            if(!isDragging)return;
-            var dx=e.touches[0].clientX-startX;
-            if(Math.abs(dx)>3)wasDragging=true;
-            currentAngle+=dx*0.5;updateTransform();startX=e.touches[0].clientX;
-        },{passive:true});
-        window.addEventListener('touchend',function(){
-            if(isDragging){setTimeout(function(){wasDragging=false;},50);stage.classList.remove('dragging');isDragging=false;}
-        });
-
-        function snapToAngle(ta){currentAngle=ta;updateTransform();autoRotate=false;updateActiveDot();}
-        function updateActiveDot(){
-            var n=albums.length,seg=360/n;
-            var idx=Math.round(((currentAngle%360)+360)%360/seg)%n;
-            idx=(n-idx)%n;
-            var dots=albumDots.querySelectorAll('.album-dot');
-            dots.forEach(function(d,i){d.classList.toggle('active',i===idx);});
-        }
-        function autoSpin(){
-            if(autoRotate&&!isDragging){currentAngle-=0.12;updateTransform();updateActiveDot();}
-            galleryAnimId=requestAnimationFrame(autoSpin);
-        }
-        autoSpin();
-
-        document.getElementById('btnPrev').addEventListener('click',function(){autoRotate=false;currentAngle+=360/albums.length;updateTransform();updateActiveDot();});
-        document.getElementById('btnNext').addEventListener('click',function(){autoRotate=false;currentAngle-=360/albums.length;updateTransform();updateActiveDot();});
-        document.getElementById('btnAuto').addEventListener('click',function(){autoRotate=!autoRotate;this.textContent=autoRotate?'⏯ 自动':'▶ 自动';});
-
-        // ==================== 9. 访客留言板 ====================
-        var GB_KEY='hz-guestbook';
-        function loadMessages(){try{return JSON.parse(localStorage.getItem(GB_KEY))||[];}catch(e){return[];}}
-        function saveMessages(msgs){localStorage.setItem(GB_KEY,JSON.stringify(msgs));}
-        function escapeHTML(str){var d=document.createElement('div');d.textContent=str;return d.innerHTML;}
-        function renderMessages(){
-            var msgs=loadMessages();
-            var container=document.getElementById('gbMessages');
-            if(msgs.length===0){container.innerHTML='<div class="gb-empty">🎮 还没有留言，来做第一个地球玩家吧！</div>';return;}
-            container.innerHTML=msgs.slice().reverse().map(function(m){
-                return '<div class="gb-msg"><div class="msg-header"><span class="msg-name">▸ '+escapeHTML(m.name)+'</span><span class="msg-time">'+escapeHTML(m.time)+'</span></div><div class="msg-body">'+escapeHTML(m.msg)+'</div></div>';
-            }).join('');
-        }
-        document.getElementById('gbForm').addEventListener('submit',function(e){
-            e.preventDefault();
-            var fd=new FormData(e.target);
-            var name=fd.get('name').trim();
-            var msg=fd.get('msg').trim();
-            if(!name||!msg)return;
-            var msgs=loadMessages();
-            var now=new Date();
-            var ts=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-            msgs.push({name:name,msg:msg,time:ts});
-            if(msgs.length>50)msgs.shift();
-            saveMessages(msgs);renderMessages();e.target.reset();
-        });
-        renderMessages();
-
-        console.log('%c 💿 专辑画廊 💬 留言板 已就绪','color:#34d399;');
-
-        } catch(e) {
-            console.error('新板块初始化失败:', e.message);
-            // 保证原有功能不受影响
-        }
-    })();
-    </script>
+  console.log('%c🟢 赫兹 HZ · Demo v2', 'color:#10b981;font-size:1.2em;font-weight:800;');
+  console.log('%cAurora bg + Noise + FluidGlass + Spotlight + Magnet + Lenis + BlurText', 'color:#94a3b8;');
+  console.log('%c方向：暗黑玻璃态 · 翡翠绿 accent · Cabinet Grotesk', 'color:#94a3b8;');
+})();
+</script>
 
 </body>
 </html>
