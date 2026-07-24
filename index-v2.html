@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>赫兹 HZ — Demo v2</title>
+
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/tabler-icons.min.css">
+
+<style>
+/* ============================================================
+   Variables
+   ============================================================ */
+:root {
+  --bg:        #08080a;
+  --bg-card:   rgba(18,18,26,0.55);
+  --bg-card-hover: rgba(18,18,26,0.75);
+  --bg-nav:    rgba(8,8,10,0.65);
+  --text:      #e2e8f0;
+  --text-dim:  #94a3b8;
+  --heading:   #f1f5f9;
+  --accent:    #10b981;
+  --accent-glow: rgba(16,185,129,0.10);
+  --border:    rgba(255,255,255,0.07);
+  --border-hover: rgba(16,185,129,0.30);
+  --radius:    2rem;
+  --radius-sm: calc(2rem - 0.375rem);
+  --ease:      cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+[data-theme="light"] {
+  --bg:        #f8f9fb;
+  --bg-card:   rgba(255,255,255,0.60);
+  --bg-card-hover: rgba(255,255,255,0.82);
+  --bg-nav:    rgba(248,249,251,0.65);
+  --text:      #1e293b;
+  --text-dim:  #94a3b8;
+  --heading:   #0f172a;
+  --accent:    #059669;
+  --accent-glow: rgba(5,150,105,0.06);
+  --border:    rgba(0,0,0,0.06);
+  --border-hover: rgba(5,150,105,0.22);
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.5s var(--ease), color 0.5s var(--ease);
+}
+.perspective-wrapper {
+  perspective: 1200px;
+  perspective-origin: 50% 50%;
+}
+.phone-frame {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   Aurora Background — 多层翡翠光斑
+   ============================================================ */
+.aurora-layer {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+  will-change: transform;
+}
+.aurora-1 {
+  width: 70vw; height: 70vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%);
+  top: -30%; left: -15%;
+  animation: auroraFloat1 18s ease-in-out infinite;
+}
+.aurora-2 {
+  width: 55vw; height: 55vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 65%);
+  top: 40%; right: -20%;
+  animation: auroraFloat2 22s ease-in-out infinite;
+}
+.aurora-3 {
+  width: 45vw; height: 45vw;
+  background: radial-gradient(circle, rgba(52,211,153,0.10) 0%, transparent 70%);
+  bottom: -20%; left: 35%;
+  animation: auroraFloat3 20s ease-in-out infinite;
+}
+
+@keyframes auroraFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8vw, 5vh) scale(1.1); }
+  66% { transform: translate(-3vw, 10vh) scale(0.92); }
+}
+@keyframes auroraFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-6vw, -8vh) scale(1.08); }
+  66% { transform: translate(4vw, -3vh) scale(0.95); }
+}
+@keyframes auroraFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(5vw, -10vh) scale(1.12); }
+}
+
+/* ============================================================
+   Noise Texture — 胶片颗粒
+   ============================================================ */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* Particle canvas — between aurora and content */
+.particle-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Fluid Island Nav (Dock-inspired)
+   ============================================================ */
+.nav {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: calc(100% - 32px);
+  max-width: 600px;
+  background: var(--bg-nav);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0 1.5rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.4s var(--ease), border-color 0.4s var(--ease);
+}
+.nav-logo {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--heading);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  transition: color 0.3s;
+}
+.nav-logo:hover { color: var(--accent); }
+
+.nav-links { display: flex; gap: 0.25rem; list-style: none; align-items: center; }
+.nav-links a {
+  display: block;
+  font-size: 0.8rem; font-weight: 500;
+  color: var(--text-dim); text-decoration: none;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  transition: all 0.35s var(--ease);
+}
+.nav-links a:hover {
+  color: var(--text);
+  background: var(--accent-glow);
+  transform: scale(1.08);
+}
+
+/* Dock proximity — adjacent items scale slightly */
+.nav-links a:hover + a,
+.nav-links a:has(+ a:hover) {
+  transform: scale(1.04);
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s var(--ease);
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
+
+.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; z-index: 101; }
+.hamburger span { display: block; width: 20px; height: 2px; background: var(--text); margin: 4px 0; border-radius: 2px; transition: all 0.3s var(--ease); }
+
+.nav-overlay {
+  position: fixed; inset: 0; z-index: 99;
+  background: rgba(8,8,10,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+.nav-overlay.open { opacity: 1; pointer-events: auto; }
+.nav-overlay .overlay-links { list-style: none; text-align: center; display: flex; flex-direction: column; gap: 2rem; }
+.nav-overlay .overlay-links a {
+  font-size: 1.8rem; font-weight: 700; color: var(--text-dim);
+  text-decoration: none;
+  transition: all 0.5s var(--ease);
+  transform: translateY(12px); opacity: 0;
+}
+.nav-overlay.open .overlay-links a { transform: translateY(0); opacity: 1; }
+.nav-overlay .overlay-links a:nth-child(1) { transition-delay: 0.05s; }
+.nav-overlay .overlay-links a:nth-child(2) { transition-delay: 0.12s; }
+.nav-overlay .overlay-links a:nth-child(3) { transition-delay: 0.19s; }
+.nav-overlay .overlay-links a:nth-child(4) { transition-delay: 0.26s; }
+.nav-overlay .overlay-links a:nth-child(5) { transition-delay: 0.33s; }
+.nav-overlay .overlay-links a:hover { color: var(--accent); }
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  padding: 5rem 1.25rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 1;
+}
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  align-items: flex-start;
+}
+.hero-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--border-hover);
+  border-radius: 9999px;
+}
+.hero-title {
+  font-weight: 800;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  line-height: 1.05; letter-spacing: -0.03em;
+  color: var(--heading);
+  margin-bottom: 1.5rem;
+}
+.hero-title .accent { color: var(--accent); }
+.hero-desc {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  max-width: 48ch; line-height: 1.8;
+  margin-bottom: 2.5rem;
+}
+
+/* CTA with Magnet base */
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 0.9rem 1.8rem;
+  background: var(--accent); color: #000;
+  font-family: inherit; font-weight: 700; font-size: 0.95rem;
+  border: none; border-radius: 9999px;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.4s var(--ease);
+  will-change: transform;
+}
+.cta-btn .cta-icon-circle {
+  display: flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  transition: all 0.4s var(--ease);
+}
+.cta-btn:hover .cta-icon-circle {
+  transform: translate(2px, -2px) scale(1.08);
+}
+.cta-btn:active { transform: scale(0.98); }
+
+.cta-btn-secondary {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 0.9rem 1.8rem;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit; font-weight: 600; font-size: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.4s var(--ease);
+  will-change: transform;
+}
+.cta-btn-secondary:hover {
+  border-color: var(--border-hover);
+  background: var(--accent-glow);
+}
+.cta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* Hero visual — animated orbs */
+.hero-visual {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-orb {
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(16,185,129,0.18) 0%, transparent 70%);
+  animation: orbPulse 4s ease-in-out infinite;
+}
+.hero-orb::after {
+  content: '';
+  position: absolute; inset: 40px; border-radius: 50%;
+  border: 1px solid var(--border);
+  animation: orbPulseRing 4s ease-in-out infinite;
+}
+[data-theme="light"] .hero-orb {
+  background: radial-gradient(circle at 40% 40%, rgba(5,150,105,0.28) 0%, rgba(5,150,105,0.06) 50%, transparent 70%);
+}
+[data-theme="light"] .hero-orb::after {
+  border-color: rgba(5,150,105,0.18);
+}
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+@keyframes orbPulseRing {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.10); opacity: 0.8; }
+}
+
+@keyframes rippleExpand {
+  0%   { transform:translate(-50%,-50%) scale(0.2); opacity:1; }
+  100% { transform:translate(-50%,-50%) scale(3); opacity:0; }
+}
+
+/* ============================================================
+   Section Common
+   ============================================================ */
+.section { padding: 5rem 1.25rem; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+.section-label {
+  display: inline-block;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--border-hover);
+  border-radius: 9999px;
+}
+.section-title {
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: -0.02em;
+  color: var(--heading);
+  margin-bottom: 0.75rem;
+}
+.section-sub {
+  color: var(--text-dim);
+  font-size: 1rem;
+  max-width: 55ch; line-height: 1.8;
+  margin-bottom: 3rem;
+}
+
+/* ============================================================
+   FluidGlass Card — 比 Doppelrand 更透
+   ============================================================ */
+.glass-card {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  transition: border-color 0.5s var(--ease), box-shadow 0.5s var(--ease);
+}
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  pointer-events: none;
+  transition: all 0.5s var(--ease);
+}
+.glass-card .spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: inherit;
+  transition: opacity 0.4s var(--ease);
+}
+.glass-card:hover { border-color: var(--border-hover); }
+.glass-card:hover::before { box-shadow: inset 0 1px 2px rgba(16,185,129,0.10); }
+.glass-card:hover .spotlight { opacity: 1; }
+.glass-card > * { position: relative; z-index: 1; }
+
+/* ---- Float Card — 3D 漂浮卡片 ---- */
+.float-card {
+  transform-style: preserve-3d;
+  transition: opacity 0.4s var(--ease);
+  position: relative;
+}
+/* Doppelrand 外壳 — 天青色 */
+.float-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid rgba(10,186,181,0.25);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: border-color 0.5s var(--ease), opacity 0.5s var(--ease);
+}
+.float-card:hover::before { border-color: rgba(10,186,181,0.65); opacity: 1; }
+
+[data-theme="light"] .float-card::before {
+  border-color: rgba(10,186,181,0.35);
+  opacity: 0.8;
+}
+[data-theme="light"] .float-card:hover::before {
+  border-color: rgba(10,186,181,0.7);
+  opacity: 1;
+}
+[data-theme="light"] .float-card::after {
+  opacity: 0.4;
+}
+[data-theme="light"] .float-card-inner {
+  border-color: rgba(0,0,0,0.08);
+}
+[data-theme="light"] .float-card-inner::before {
+  border-color: rgba(0,0,0,0.04);
+}
+[data-theme="light"] .float-card-inner::after {
+  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 20%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.04) 80%, transparent 100%);
+}
+
+/* 四角括号 — flammini 风格 */
+.float-card::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: calc(var(--radius) + 6px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+  transition: opacity 0.5s var(--ease);
+  background:
+    /* 左上 */ linear-gradient(135deg, var(--accent) 2px, transparent 2px) 0 0 / 8px 2px no-repeat,
+    linear-gradient(135deg, var(--accent) 2px, transparent 2px) 0 0 / 2px 8px no-repeat,
+    /* 右上 */ linear-gradient(225deg, var(--accent) 2px, transparent 2px) 100% 0 / 8px 2px no-repeat,
+    linear-gradient(225deg, var(--accent) 2px, transparent 2px) 100% 0 / 2px 8px no-repeat,
+    /* 左下 */ linear-gradient(45deg, var(--accent) 2px, transparent 2px) 0 100% / 8px 2px no-repeat,
+    linear-gradient(45deg, var(--accent) 2px, transparent 2px) 0 100% / 2px 8px no-repeat,
+    /* 右下 */ linear-gradient(315deg, var(--accent) 2px, transparent 2px) 100% 100% / 8px 2px no-repeat,
+    linear-gradient(315deg, var(--accent) 2px, transparent 2px) 100% 100% / 2px 8px no-repeat;
+}
+.float-card:hover::after { opacity: 0.7; }
+
+.float-card-inner {
+  position: relative;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  transition: border-color 0.5s var(--ease), box-shadow 0.3s ease-out;
+  backface-visibility: hidden;
+}
+/* 内边框 + 顶部微光高线 */
+.float-card-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255,255,255,0.05);
+  pointer-events: none;
+  z-index: 0;
+}
+.float-card-inner::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 12px; right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 80%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.float-card:hover .float-card-inner::after {
+  opacity: 1.5;
+}
+.float-card-inner > * { position: relative; z-index: 1; }
+
+/* Depth shadow — JS 调整偏移和透明度模拟悬浮高度 */
+.float-shadow {
+  position: absolute;
+  bottom: -8px; left: 8%; right: 8%;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(16,185,129,0.08);
+  filter: blur(12px);
+  pointer-events: none;
+  z-index: -1;
+  transition: all 0.3s ease-out;
+}
+.float-card-inner .spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+}
+
+/* ============================================================
+   About
+   ============================================================ */
+.about-text { font-size: 1.05rem; line-height: 2; max-width: 60ch; }
+.about-text .hl { color: var(--accent); font-weight: 600; }
+.about-tags-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 2rem; }
+.about-tag {
+  font-size: 0.75rem; font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  color: var(--text-dim);
+  transition: all 0.3s var(--ease);
+}
+.about-tag:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+/* ============================================================
+   Bento
+   ============================================================ */
+.bento { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.bento-item { min-height: auto; }
+.bento-item.tall { grid-row: span 1; }
+
+/* ============================================================
+   BlurText Scroll Reveal
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(6px);
+  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease), filter 0.8s var(--ease);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* ============================================================
+   Gallery — 3D 圆环
+   ============================================================ */
+.gallery-placeholder {
+  min-height: 300px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.gallery-scene {
+  perspective: 1200px; perspective-origin: 50% 50%;
+  height: 360px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: visible;
+}
+.gallery-stage {
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear;
+  cursor: grab;
+  position: relative;
+  width: 300px; height: 300px;
+}
+.gallery-stage:active { cursor: grabbing; }
+.gallery-stage.dragging { transition: none; }
+.gallery-disc {
+  position: absolute; width: 52px; height: 52px;
+  left: 50%; top: 50%; margin-left: -26px; margin-top: -26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  transform: translateZ(-1px);
+  pointer-events: none;
+}
+.gallery-disc::after {
+  content: '\25C7'; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem; color: var(--accent);
+}
+.album-slot {
+  position: absolute; width: 64px; height: 64px;
+  left: 50%; top: 50%; margin-left: -32px; margin-top: -32px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+.album-slot:hover { z-index: 10; }
+.album-slot:hover .album-face-front {
+  filter: brightness(1.15);
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+.album-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  transition: transform 0.6s var(--ease);
+  border-radius: 6px;
+}
+.album-face-front {
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.album-face-front img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.album-face-back {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transform: rotateY(180deg);
+  padding: 0.5rem; display: flex; flex-direction: column; justify-content: center;
+  overflow: hidden;
+  text-align: center;
+}
+.album-face-back .alb-artist {
+  font-size: 0.6rem; font-weight: 600; color: var(--accent);
+  margin-bottom: 0.2rem;
+}
+.album-face-back .alb-title {
+  font-size: 0.65rem; color: var(--heading); font-weight: 700;
+  line-height: 1.3;
+}
+.album-slot.flipped .album-face-front { transform: rotateY(180deg); }
+.album-slot.flipped .album-face-back  { transform: rotateY(0deg); }
+
+.gallery-controls {
+  display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;
+}
+.gallery-btn {
+  font-family: inherit; font-size: 0.8rem; font-weight: 600;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.55rem 1.1rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.gallery-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-glow);
+}
+.gallery-hint {
+  font-size: 0.75rem; color: var(--text-dim);
+  text-align: center; margin-top: 0.75rem; opacity: 0.6;
+}
+.album-dot-nav {
+  display: flex; gap: 0.35rem; justify-content: center; margin-top: 1rem;
+  flex-wrap: wrap; max-width: 500px; margin-left: auto; margin-right: auto;
+}
+.album-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.album-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.album-dot:hover { border-color: var(--accent); transform: scale(1.4); }
+
+@media (max-width: 768px) {
+  .gallery-scene { height: 380px; perspective: 1000px; }
+  .album-slot { width: 62px; height: 62px; margin-left: -31px; margin-top: -31px; }
+  .gallery-disc { width: 48px; height: 48px; margin-left: -24px; margin-top: -24px; }
+}
+
+/* ============================================================
+   Guestbook
+   ============================================================ */
+.gb-form {
+  display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;
+}
+.gb-row { display: flex; gap: 0.75rem; }
+.gb-input {
+  flex: 1; padding: 0.7rem 0.9rem;
+  font-family: inherit; font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.3s var(--ease);
+}
+.gb-input:focus { border-color: var(--accent); }
+.gb-input::placeholder { color: var(--text-dim); opacity: 0.5; }
+.gb-textarea {
+  padding: 0.7rem 0.9rem;
+  font-family: inherit; font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  color: var(--text);
+  outline: none;
+  resize: vertical; min-height: 80px;
+  transition: border-color 0.3s var(--ease);
+}
+.gb-textarea:focus { border-color: var(--accent); }
+.gb-textarea::placeholder { color: var(--text-dim); opacity: 0.5; }
+.gb-submit {
+  font-family: inherit; font-weight: 600; font-size: 0.85rem;
+  background: var(--accent); color: #000;
+  border: none; border-radius: 9999px;
+  padding: 0.7rem 1.5rem; cursor: pointer;
+  align-self: flex-end;
+  transition: all 0.3s var(--ease);
+}
+.gb-submit:active { transform: scale(0.98); }
+.gb-msgs { display: flex; flex-direction: column; gap: 0.5rem; }
+.gb-msg {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.9rem 1.1rem;
+}
+.gb-msg .msg-head { display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
+.gb-msg .msg-name { font-weight: 600; font-size: 0.8rem; color: var(--accent); }
+.gb-msg .msg-time { font-size: 0.7rem; color: var(--text-dim); }
+.gb-msg .msg-body { font-size: 0.85rem; color: var(--text); line-height: 1.6; word-break: break-word; }
+.gb-empty { text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 2rem; }
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-dim); font-size: 0.85rem;
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  max-width: 1200px; margin: 0 auto;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Nav */
+  .nav-links { display: none; }
+  .hamburger { display: block; }
+  .nav { max-width: calc(100% - 24px); padding: 0 1rem; height: 48px; }
+
+  /* Hero */
+  .hero { padding: 5rem 1.25rem 3rem; min-height: auto; }
+  .hero-content { grid-template-columns: 1fr; gap: 1.5rem; }
+  .hero-title { font-size: clamp(2rem, 10vw, 3.5rem); }
+  .hero-desc { font-size: 0.95rem; }
+  .hero-visual { min-height: 180px; }
+  .hero-orb { width: 180px; height: 180px; }
+  .hero-eyebrow { font-size: 0.65rem; padding: 0.25rem 0.7rem; }
+  .cta-btn, .cta-btn-secondary { padding: 0.75rem 1.4rem; font-size: 0.85rem; }
+  .cta-btn .cta-icon-circle { width: 1.6rem; height: 1.6rem; }
+
+  /* Sections */
+  .section { padding: 5rem 1.25rem; }
+  .section-title { font-size: clamp(1.5rem, 6vw, 2rem); }
+  .section-sub { font-size: 0.9rem; margin-bottom: 2rem; }
+  .section-label { font-size: 0.65rem; padding: 0.2rem 0.65rem; }
+
+  /* Cards */
+  .float-card-inner { padding: 1.5rem 1.25rem; border-radius: 1.5rem; }
+  .float-card::before { border-radius: calc(1.5rem + 2px) !important; }
+  .float-card::after { border-radius: calc(1.5rem + 6px) !important; inset: -4px; }
+  .about-text { font-size: 0.9rem; line-height: 1.85; }
+  .about-tag { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+
+  /* Bento */
+  .bento { grid-template-columns: 1fr; gap: 1rem; }
+  .bento-item { min-height: auto; }
+  .bento-item.tall { grid-row: span 1; }
+
+  /* Gallery */
+  .gallery-scene { height: 360px; }
+  .album-slot { width: 64px; height: 64px; margin-left: -32px; margin-top: -32px; }
+  .gallery-btn { font-size: 0.7rem; padding: 0.45rem 0.9rem; }
+  .gallery-hint { font-size: 0.7rem; }
+
+  /* Footer */
+  .footer { padding: 2rem 1.25rem; font-size: 0.75rem; }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 4rem 1rem 2.5rem; }
+  .hero-title { font-size: clamp(1.7rem, 9vw, 2.5rem); }
+  .hero-desc { font-size: 0.85rem; }
+  .hero-orb { width: 140px; height: 140px; }
+  .section { padding: 3.5rem 1rem; }
+  .float-card-inner { padding: 1.25rem 1rem; border-radius: 1.25rem; }
+  .float-card::before { border-radius: calc(1.25rem + 2px) !important; }
+  .float-card::after { border-radius: calc(1.25rem + 6px) !important; inset: -3px; }
+  .gallery-scene { height: 300px; }
+  .album-slot { width: 52px; height: 52px; margin-left: -26px; margin-top: -26px; }
+  .gallery-btn { font-size: 0.65rem; padding: 0.4rem 0.75rem; }
+  .cta-btn, .cta-btn-secondary { padding: 0.65rem 1.2rem; font-size: 0.8rem; }
+}
+
+/* ============================================================
+   Reduced Motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
+  .reveal { opacity: 1; transform: none; filter: none; }
+  .aurora-layer { display: none; }
+  .noise-overlay { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Fixed layers (outside perspective, always viewport-relative) -->
+<div class="aurora-layer aurora-1"></div>
+<div class="aurora-layer aurora-2"></div>
+<div class="aurora-layer aurora-3"></div>
+<canvas id="particleCanvas" class="particle-canvas"></canvas>
+<div class="noise-overlay"></div>
+
+<!-- Phone frame -->
+<div class="phone-frame">
+<!-- Perspective wrapper for ring effect -->
+<div class="perspective-wrapper">
+
+<!-- ============================================================
+     Nav
+     ============================================================ -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo">HZ</a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#projects">项目</a></li>
+    <li><a href="#gallery">画廊</a></li>
+    <li><a href="#contact">联系</a></li>
+    <li><a href="#guestbook">留言</a></li>
+  </ul>
+  <button class="theme-toggle" id="themeToggle" aria-label="切换主题">☀</button>
+  <button class="hamburger" id="hamburger" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-overlay" id="navOverlay">
+  <ul class="overlay-links">
+    <li><a href="#about">关于</a></li>
+    <li><a href="#projects">项目</a></li>
+    <li><a href="#gallery">画廊</a></li>
+    <li><a href="#contact">联系</a></li>
+    <li><a href="#guestbook">留言</a></li>
+  </ul>
+</div>
+
+<!-- ============================================================
+     Hero
+     ============================================================ -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <div class="hero-text">
+      <span class="hero-eyebrow">EARTH ONLINE PLAYER</span>
+      <h1 class="hero-title">
+        贺智航<br>
+        <span class="accent">赫兹</span>
+      </h1>
+      <p class="hero-desc">
+        惠州 · 电子信息工程 · 大一<br>
+        在 AI 和代码之间摸索，在星露谷和瓦罗兰特之间横跳。
+      </p>
+      <div class="cta-row">
+        <a href="#about" class="cta-btn" data-magnet>
+          了解更多
+          <span class="cta-icon-circle"><i class="ti ti-arrow-down" style="font-size:0.9rem;"></i></span>
+        </a>
+        <a href="#contact" class="cta-btn-secondary" data-magnet>联系我</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-orb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     About — FluidGlass + Spotlight
+     ============================================================ -->
+<section class="section reveal" id="about">
+  <span class="section-label">ABOUT</span>
+  <h2 class="section-title">关于我</h2>
+  <p class="section-sub">一段碎碎念，帮你了解我。</p>
+
+  <div class="float-card" data-float data-spotlight>
+    <div class="float-card-inner">
+      <div class="spotlight"></div>
+      <div class="float-shadow"></div>
+      <p class="about-text">
+      嘿，我是<span class="hl">贺智航</span>，也可以叫我<span class="hl">赫兹</span>。<br>
+      来自广东惠州，一个正在学习怎么跟 AI 打交道的普通人。<br>
+      业余时间不是在打瓦就是在星露谷里种地，希望有老乡跟我一起联机。<br>
+      最喜欢的歌手是 <span class="hl">YZH</span>，可能有些小众但他真的是宝藏rapper。
+    </p>
+    <div class="about-tags-row">
+      <span class="about-tag">Valorant</span>
+      <span class="about-tag">星露谷</span>
+      <span class="about-tag">AI 学习者</span>
+      <span class="about-tag">YZH</span>
+      <span class="about-tag">惠州</span>
+      <span class="about-tag">Hip-Hop</span>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Projects Bento — 每个卡片都 Spotlight
+     ============================================================ -->
+<section class="section reveal" id="projects">
+  <span class="section-label">PROJECTS</span>
+  <h2 class="section-title">我的项目</h2>
+  <p class="section-sub">正在做和已经做了的东西。</p>
+
+  <div class="bento">
+    <div class="bento-item tall">
+      <div class="float-card" data-float data-spotlight style="height:100%;">
+        <div class="float-card-inner" style="height:100%; display:flex; flex-direction:column; justify-content:center;">
+          <div class="spotlight"></div>
+          <div class="float-shadow"></div>
+          <div style="font-size:2.5rem; margin-bottom:1rem;">🍵</div>
+        <h3 style="font-weight:700; font-size:1.25rem; margin-bottom:0.5rem; color:var(--heading);">中国茶全球表达</h3>
+        <p style="color:var(--text-dim); line-height:1.8;">拍一杯茶，让世界说得清、喝得懂。<br>AI 识茶 · 风味翻译 · 品鉴卡。</p>
+        <a href="https://lotus6619.github.io/tea-2.0/" target="_blank" rel="noopener" class="cta-btn-secondary" data-magnet style="margin-top:1.5rem; width:fit-content;">
+          访问网站
+          <span class="cta-icon-circle" style="width:1.6rem;height:1.6rem;background:var(--accent-glow);">
+            <i class="ti ti-arrow-up-right" style="font-size:0.75rem; color:var(--accent);"></i>
+          </span>
+        </a>
+        </div>
+      </div>
+    </div>
+    <div class="bento-item">
+      <div class="float-card" data-float data-spotlight style="height:100%;">
+        <div class="float-card-inner" style="height:100%; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+          <div class="spotlight"></div>
+          <div class="float-shadow"></div>
+          <img src="assets/证书.jpg" alt="AI训练师证书" style="width:100%; border-radius:12px; margin-bottom:0.75rem;" loading="lazy">
+          <h3 style="font-weight:700; font-size:1.1rem; color:var(--heading);">AI 训练师证书</h3>
+          <p style="color:var(--text-dim); font-size:0.8rem; margin-top:0.3rem;">达摩院 · 2026</p>
+        </div>
+      </div>
+    </div>
+    <div class="bento-item">
+      <div class="float-card" data-float data-spotlight style="height:100%;">
+        <div class="float-card-inner" style="height:100%; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+          <div class="spotlight"></div>
+          <div class="float-shadow"></div>
+          <div style="font-size:2rem; margin-bottom:0.75rem;">🔜</div>
+          <h3 style="font-weight:700; font-size:1.1rem; color:var(--heading);">更多项目</h3>
+          <p style="color:var(--text-dim); font-size:0.85rem; margin-top:0.3rem;">正在建设中</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Gallery
+     ============================================================ -->
+<section class="section reveal" id="gallery">
+  <span class="section-label">GALLERY</span>
+  <h2 class="section-title">专辑画廊</h2>
+  <p class="section-sub">3D 圆环 · 拖拽旋转 · 点击封面翻转</p>
+
+  <div class="gallery-scene" id="galleryScene">
+    <div class="gallery-stage" id="galleryStage">
+      <div class="gallery-disc"></div>
+    </div>
+  </div>
+
+  <div class="gallery-controls">
+    <button class="gallery-btn" id="btnPrev">◀</button>
+    <button class="gallery-btn" id="btnAuto">⏯ 自动</button>
+    <button class="gallery-btn" id="btnNext">▶</button>
+  </div>
+  <p class="gallery-hint">🖱 拖拽旋转 &nbsp;|&nbsp; 👆 点击翻转查看详情</p>
+  <div class="album-dot-nav" id="albumDots"></div>
+</section>
+
+<!-- ============================================================
+     Contact
+     ============================================================ -->
+<section class="section reveal" id="contact">
+  <span class="section-label">CONTACT</span>
+  <h2 class="section-title">联系我</h2>
+  <p class="section-sub">下面这些地方也许能找到我。</p>
+
+  <div class="float-card" data-float data-spotlight style="max-width:480px;">
+    <div class="float-card-inner" style="text-align:center;">
+      <div class="spotlight"></div>
+      <div class="float-shadow"></div>
+      <div style="display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;">
+      <a href="https://github.com/lotus6619" target="_blank" rel="noopener" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-github" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-bilibili" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-music" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-discord" style="font-size:1.2rem;"></i>
+      </a>
+      <a href="#" onclick="navigator.clipboard.writeText('hzh15016056652');alert('已复制');return false;" class="cta-btn-secondary" data-magnet style="width:48px;height:48px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-brand-wechat" style="font-size:1.2rem;"></i>
+      </a>
+    </div>
+    <p style="color:var(--text-dim); font-size:0.8rem; margin-top:1rem;">微信: hzh15016056652</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     Guestbook
+     ============================================================ -->
+<section class="section reveal" id="guestbook">
+  <span class="section-label">GUESTBOOK</span>
+  <h2 class="section-title">访客留言</h2>
+  <p class="section-sub">说点什么吧。</p>
+
+  <div class="float-card" data-float data-spotlight>
+    <div class="float-card-inner">
+      <div class="spotlight"></div>
+      <div class="float-shadow"></div>
+      <form class="gb-form" id="gbForm" autocomplete="off">
+        <div class="gb-row">
+          <input class="gb-input" name="name" placeholder="昵称" maxlength="20" required>
+          <input class="gb-input" name="email" placeholder="邮箱（选填）" maxlength="50">
+        </div>
+        <textarea class="gb-textarea" name="msg" placeholder="说点什么..." maxlength="300" required></textarea>
+        <button type="submit" class="gb-submit">发送</button>
+      </form>
+      <div class="gb-msgs" id="gbMsgs"></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>© 2026 赫兹 HERTZ · Made in Huizhou</p>
+</footer>
+
+</div><!-- end perspective-wrapper -->
+</div><!-- end phone-frame -->
+
+<!-- ============================================================
+     Lenis Smooth Scroll
+     ============================================================ -->
+<script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<script>
+(function() {
+  'use strict';
+
+  // ======================== Lenis ========================
+  const lenis = new Lenis({ lerp: 0.05, wheelMultiplier: 0.7, smoothTouch: false });
+  function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+
+  // ======================== Starfield ========================
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  const isReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = window.innerWidth < 768;
+  const STAR_COUNT = isMobile ? 50 : 100;
+  let stars = [];
+  let animId;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Star {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 1.5 + 0.3;
+      this.baseAlpha = Math.random() * 0.45 + 0.12;
+      this.alpha = this.baseAlpha;
+      this.twinkleSpeed = Math.random() * 0.015 + 0.004;
+      this.twinkleOffset = Math.random() * Math.PI * 2;
+      this.driftX = (Math.random() - 0.5) * 0.06;
+      this.driftY = (Math.random() - 0.5) * 0.06;
+    }
+    update() {
+      this.x += this.driftX;
+      this.y += this.driftY;
+      if (this.x < -5) this.x = canvas.width + 5;
+      if (this.x > canvas.width + 5) this.x = -5;
+      if (this.y < -5) this.y = canvas.height + 5;
+      if (this.y > canvas.height + 5) this.y = -5;
+      this.alpha = this.baseAlpha + Math.sin(Date.now() * this.twinkleSpeed + this.twinkleOffset) * 0.18;
+      this.alpha = Math.max(0.04, Math.min(0.65, this.alpha));
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(16,185,129,${this.alpha})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < STAR_COUNT; i++) stars.push(new Star());
+
+  function animateStarfield() {
+    if (isReduced) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => { s.update(); s.draw(); });
+    animId = requestAnimationFrame(animateStarfield);
+  }
+  animateStarfield();
+
+  // ======================== Touch Ripple — DOM 墨绿涟漪 ========================
+  const rippleContainer = document.createElement('div');
+  rippleContainer.style.cssText = 'position:fixed;inset:0;z-index:50;pointer-events:none;';
+  document.body.appendChild(rippleContainer);
+
+  function spawnRipple(x, y) {
+    // 3 concentric layers
+    const layers = [
+      { w:18, border:'1px solid rgba(16,185,129,0.5)', bg:'radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 60%)', dur:0.8 },
+      { w:28, border:'0.8px solid rgba(16,185,129,0.3)', bg:'transparent', dur:1.0 },
+    ];
+
+    layers.forEach(l => {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        position:fixed; left:${x}px; top:${y}px;
+        width:${l.w}px; height:${l.w}px; border-radius:50%;
+        border:${l.border}; background:${l.bg};
+        animation:rippleExpand ${l.dur}s cubic-bezier(0.32,0.72,0,1) forwards;
+        pointer-events:none;
+      `;
+      rippleContainer.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    });
+
+    // Cleanup old ripples
+    while (rippleContainer.children.length > 40) rippleContainer.firstChild.remove();
+  }
+
+  document.addEventListener('touchstart', (e) => {
+    Array.from(e.touches).forEach(t => spawnRipple(t.clientX, t.clientY));
+  }, { passive: true });
+  document.addEventListener('click', (e) => { spawnRipple(e.clientX, e.clientY); });
+
+  // ======================== 3D Album Gallery ========================
+  const galleryAlbums = [
+    {file:'assets/albums/陈一豪-鼻塞.jpg', artist:'陈一豪', title:'鼻塞'},
+    {file:'assets/albums/陈粒-走马.jpg', artist:'陈粒', title:'走马'},
+    {file:'assets/albums/陈粒-美丽海.jpg', artist:'陈粒', title:'美丽海'},
+    {file:'assets/albums/等一下就回家-瀑布.jpg', artist:'等一下就回家', title:'瀑布'},
+    {file:'assets/albums/河南说唱之神-工厂.jpg', artist:'河南说唱之神', title:'工厂'},
+    {file:'assets/albums/华云龙-台北一夜.jpg', artist:'华云龙', title:'台北一夜'},
+    {file:'assets/albums/黄旭-旅行家的忠诚.jpg', artist:'黄旭', title:'旅行家的忠诚'},
+    {file:'assets/albums/李荣浩-哎呀.jpg', artist:'李荣浩', title:'哎呀'},
+    {file:'assets/albums/李荣浩-恋人.jpg', artist:'李荣浩', title:'恋人'},
+    {file:'assets/albums/李荣浩，张惠妹-对等关系.jpg', artist:'李荣浩,张惠妹', title:'对等关系'},
+    {file:'assets/albums/马思维-house music.jpg', artist:'马思维', title:'house music'},
+    {file:'assets/albums/马思维-崂山道士.jpg', artist:'马思维', title:'崂山道士'},
+    {file:'assets/albums/盆栽-die for you.jpg', artist:'盆栽', title:'die for you'},
+    {file:'assets/albums/汤令山-玻璃.jpg', artist:'汤令山', title:'玻璃'},
+    {file:'assets/albums/王以太，艾热-别怕变老.jpg', artist:'王以太,艾热', title:'别怕变老'},
+    {file:'assets/albums/王以太，艾热-周旋.jpg', artist:'王以太,艾热', title:'周旋'},
+    {file:'assets/albums/shark-all right.jpg', artist:'shark', title:'all right'},
+    {file:'assets/albums/Vinz-T 杨过 (1).jpg', artist:'Vinz-T', title:'杨过'},
+    {file:'assets/albums/JVKE-golden hour.jpg', artist:'JVKE', title:'golden hour'},
+    {file:'assets/albums/JVKE-her.jpg', artist:'JVKE', title:'her'},
+    {file:'assets/albums/JVKE-pretty.jpg', artist:'JVKE', title:'pretty'},
+    {file:'assets/albums/JVKE-this is what winter feels like.jpg', artist:'JVKE', title:'this is what winter feels like'},
+    {file:'assets/albums/Post Malone-sunflowers.jpg', artist:'Post Malone', title:'sunflowers'},
+    {file:'assets/albums/yzh-一叶知秋.jpg', artist:'YZH', title:'一叶知秋'},
+    {file:'assets/albums/yzh-墨梅.jpg', artist:'YZH', title:'墨梅'},
+    {file:'assets/albums/yzh-巴陵戏.jpg', artist:'YZH', title:'巴陵戏'},
+    {file:'assets/albums/yzh-插叙人生.jpg', artist:'YZH', title:'插叙人生'},
+    {file:'assets/albums/yzh-无边记.jpg', artist:'YZH', title:'无边记'},
+    {file:'assets/albums/yzh-月亮河.jpg', artist:'YZH', title:'月亮河'},
+    {file:'assets/albums/yzh-醒.jpg', artist:'YZH', title:'醒'},
+  ];
+
+  const gStage = document.getElementById('galleryStage');
+  const gScene = document.getElementById('galleryScene');
+  const gDots  = document.getElementById('albumDots');
+  let gAngle = 0, gDragging = false, gWasDrag = false, gStartX = 0, gAuto = true, gAnimId;
+  let gPausedByFlip = false; // 翻转导致的暂停
+
+  function updateGTransform() {
+    gStage.style.transform = 'rotate(-15deg) rotateY(' + gAngle + 'deg)';
+  }
+  updateGTransform();
+
+  function buildRing() {
+    gStage.querySelectorAll('.album-slot').forEach(s => s.remove());
+    gDots.innerHTML = '';
+    const n = galleryAlbums.length;
+    const radius = Math.max(260, n * 11);
+
+    galleryAlbums.forEach((alb, i) => {
+      const angle = (360 / n) * i;
+      const slot = document.createElement('div');
+      slot.className = 'album-slot';
+      slot.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + radius + 'px)';
+      slot.innerHTML = '<div class="album-face album-face-front"><img src="' + alb.file + '" alt="' + alb.title + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<span style=font-size:0.6rem;color:var(--text-dim)>NO IMG</span>\'"></div><div class="album-face album-face-back"><div class="alb-artist">' + alb.artist + '</div><div class="alb-title">' + alb.title + '</div></div>';
+      slot.addEventListener('click', function(e) {
+        if (gWasDrag) return;
+        slot.classList.toggle('flipped');
+        // 检查是否有卡片处于翻转状态
+        const anyFlipped = gStage.querySelectorAll('.album-slot.flipped').length > 0;
+        if (anyFlipped && gAuto) {
+          gAuto = false;
+          gPausedByFlip = true;
+        } else if (!anyFlipped && gPausedByFlip) {
+          gAuto = true;
+          gPausedByFlip = false;
+        }
+      });
+      gStage.appendChild(slot);
+
+      const dot = document.createElement('span');
+      dot.className = 'album-dot';
+      dot.title = alb.artist + ' - ' + alb.title;
+      dot.addEventListener('click', (function(a) { return function() { snapToAngle(-a); }; })(angle));
+      gDots.appendChild(dot);
+    });
+  }
+  buildRing();
+
+  // Drag only on album covers — use event delegation
+  gStage.addEventListener('mousedown', function(e) {
+    if (!e.target.closest('.album-slot')) return;
+    gDragging = true; gWasDrag = false; gStartX = e.clientX; gStage.classList.add('dragging');
+  });
+  gStage.addEventListener('touchstart', function(e) {
+    if (!e.target.closest('.album-slot')) return;
+    gDragging = true; gWasDrag = false; gStartX = e.touches[0].clientX; gStage.classList.add('dragging');
+  }, { passive: true });
+  window.addEventListener('mousemove', function(e) {
+    if (!gDragging) return;
+    const dx = e.clientX - gStartX;
+    if (Math.abs(dx) > 3) { gWasDrag = true; gAuto = false; gPausedByFlip = false; }
+    gAngle += dx * 0.5; updateGTransform(); gStartX = e.clientX;
+  });
+  window.addEventListener('mouseup', function() { if (gDragging) { setTimeout(function() { gWasDrag = false; }, 50); gStage.classList.remove('dragging'); gDragging = false; } });
+  window.addEventListener('touchmove', function(e) {
+    if (!gDragging) return;
+    const dx = e.touches[0].clientX - gStartX;
+    if (Math.abs(dx) > 3) { gWasDrag = true; gAuto = false; gPausedByFlip = false; }
+    gAngle += dx * 0.5; updateGTransform(); gStartX = e.touches[0].clientX;
+  }, { passive: true });
+  window.addEventListener('touchend', function() { if (gDragging) { setTimeout(function() { gWasDrag = false; }, 50); gStage.classList.remove('dragging'); gDragging = false; } });
+
+  function snapToAngle(ta) { gAngle = ta; updateGTransform(); gAuto = false; updateActiveDot(); }
+  function updateActiveDot() {
+    const n = galleryAlbums.length, seg = 360 / n;
+    let idx = Math.round(((gAngle % 360) + 360) % 360 / seg) % n;
+    idx = (n - idx) % n;
+    const dots = gDots.querySelectorAll('.album-dot');
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+  }
+  function autoSpin() {
+    if (gAuto && !gDragging) { gAngle -= 0.12; updateGTransform(); updateActiveDot(); }
+    gAnimId = requestAnimationFrame(autoSpin);
+  }
+  autoSpin();
+
+  document.getElementById('btnPrev').addEventListener('click', function() { gAuto = false; gPausedByFlip = false; gAngle += 360 / galleryAlbums.length; updateGTransform(); updateActiveDot(); });
+  document.getElementById('btnNext').addEventListener('click', function() { gAuto = false; gPausedByFlip = false; gAngle -= 360 / galleryAlbums.length; updateGTransform(); updateActiveDot(); });
+  document.getElementById('btnAuto').addEventListener('click', function() { gAuto = !gAuto; gPausedByFlip = false; this.textContent = gAuto ? '⏯ 自动' : '▶ 自动'; });
+
+  // ======================== Guestbook ========================
+  const GB_KEY = 'hz-guestbook-v2';
+  function loadMsgs() { try { return JSON.parse(localStorage.getItem(GB_KEY)) || []; } catch(e) { return []; } }
+  function saveMsgs(msgs) { localStorage.setItem(GB_KEY, JSON.stringify(msgs)); }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function renderMsgs() {
+    const msgs = loadMsgs();
+    const container = document.getElementById('gbMsgs');
+    if (!msgs.length) { container.innerHTML = '<div class="gb-empty">还没有留言，来做第一个吧 ✨</div>'; return; }
+    container.innerHTML = msgs.slice().reverse().map(m =>
+      '<div class="gb-msg"><div class="msg-head"><span class="msg-name">' + esc(m.name) + '</span><span class="msg-time">' + esc(m.time) + '</span></div><div class="msg-body">' + esc(m.msg) + '</div></div>'
+    ).join('');
+  }
+  document.getElementById('gbForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = fd.get('name').trim();
+    const msg = fd.get('msg').trim();
+    if (!name || !msg) return;
+    const msgs = loadMsgs();
+    const now = new Date();
+    const ts = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    msgs.push({ name, msg, time: ts });
+    if (msgs.length > 50) msgs.shift();
+    saveMsgs(msgs); renderMsgs(); e.target.reset();
+  });
+  renderMsgs();
+
+  // ======================== Theme ========================
+  const html = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('hz-theme-v2');
+  if (saved) html.setAttribute('data-theme', saved);
+  function updateIcon() {
+    themeToggle.textContent = html.getAttribute('data-theme') === 'dark' ? '☀' : '☾';
+  }
+  updateIcon();
+  themeToggle.addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('hz-theme-v2', next);
+    updateIcon();
+  });
+
+  // ======================== Mobile Nav ========================
+  const hamburger = document.getElementById('hamburger');
+  const overlay = document.getElementById('navOverlay');
+  let menuOpen = false;
+  function openMenu() {
+    menuOpen = true;
+    overlay.classList.add('open');
+    lenis.stop();
+    const spans = hamburger.querySelectorAll('span');
+    spans[0].style.transform = 'rotate(45deg) translate(5px,5px)';
+    spans[1].style.opacity = '0';
+    spans[2].style.transform = 'rotate(-45deg) translate(5px,-5px)';
+  }
+  function closeMenu() {
+    menuOpen = false;
+    overlay.classList.remove('open');
+    lenis.start();
+    const spans = hamburger.querySelectorAll('span');
+    spans[0].style.transform = '';
+    spans[1].style.opacity = '';
+    spans[2].style.transform = '';
+  }
+  hamburger.addEventListener('click', () => menuOpen ? closeMenu() : openMenu());
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeMenu(); });
+  overlay.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen) closeMenu(); });
+
+  // ======================== SpotlightCard ========================
+  document.querySelectorAll('[data-spotlight]').forEach(card => {
+    const inner = card.classList.contains('float-card') ? card.querySelector('.float-card-inner') : card;
+    const spot = inner ? inner.querySelector('.spotlight') : card.querySelector('.spotlight');
+    if (!spot) return;
+    const target = inner || card;
+    target.addEventListener('mousemove', (e) => {
+      const rect = target.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      spot.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(16,185,129,0.14) 0%, transparent 60%)`;
+    });
+    target.addEventListener('mouseleave', () => {
+      spot.style.background = '';
+    });
+  });
+
+  // ======================== Ring Carousel — 圆柱回环 ========================
+  const ringCards = document.querySelectorAll('[data-float]');
+  const RING_R = 420; // 环半径（越小曲线越明显）
+
+  function updateRing() {
+    const vh = window.innerHeight;
+    const scrollY = window.scrollY;
+
+    ringCards.forEach((card, idx) => {
+      const inner = card.querySelector('.float-card-inner');
+      const shadow = card.querySelector('.float-shadow');
+      if (!inner) return;
+
+      const rect = card.getBoundingClientRect();
+      const cardWorldY = rect.top + scrollY + rect.height / 2;
+      const ringRot = scrollY / RING_R;
+      const cardAngle = cardWorldY / RING_R;
+      const relAngle = cardAngle - ringRot - (vh / 2) / RING_R;
+
+      // Visible range ±55°
+      const absAngle = Math.abs(relAngle);
+      if (absAngle > 0.96) {
+        card.style.opacity = '0';
+        card.style.pointerEvents = 'none';
+        return;
+      }
+
+      const deg = relAngle * (180 / Math.PI);
+      const fade = Math.cos(relAngle); // smooth cosine fade
+
+      card.style.opacity = fade;
+      card.style.pointerEvents = fade > 0.4 ? 'auto' : 'none';
+
+      // Full curve rotation + shallow depth (0-40px, never overlaps)
+      inner.style.transform = `rotateX(${deg}deg) translateZ(${40 * fade}px)`;
+
+      if (shadow) {
+        shadow.style.opacity = fade * 0.1;
+        shadow.style.bottom = `${-3 - fade * 10}px`;
+        shadow.style.filter = `blur(${5 + fade * 12}px)`;
+      }
+    });
+
+    requestAnimationFrame(updateRing);
+  }
+  requestAnimationFrame(updateRing);
+
+  // ======================== Magnet ========================
+  document.querySelectorAll('[data-magnet]').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) * 0.18;
+      const dy = (e.clientY - cy) * 0.18;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = '';
+    });
+  });
+
+  // ======================== BlurText Scroll Reveal ========================
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+  reveals.forEach(el => obs.observe(el));
+
+  console.log('%c🟢 赫兹 HZ · Demo v2', 'color:#10b981;font-size:1.2em;font-weight:800;');
+  console.log('%cAurora bg + Noise + FluidGlass + Spotlight + Magnet + Lenis + BlurText', 'color:#94a3b8;');
+  console.log('%c方向：暗黑玻璃态 · 翡翠绿 accent · Cabinet Grotesk', 'color:#94a3b8;');
+})();
+</script>
+
+</body>
+</html>
