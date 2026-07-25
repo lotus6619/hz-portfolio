@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CardSwap Demo — 技能卡片轮播</title>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+  background: #08080a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Aurora bg */
+.aurora {
+  position: fixed; border-radius: 50%; filter: blur(120px);
+  pointer-events: none; z-index: 0; opacity: 0.45;
+}
+.aurora-1 {
+  width: 70vw; height: 70vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, transparent 70%);
+  top: -30%; left: -15%;
+}
+.aurora-2 {
+  width: 55vw; height: 55vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 65%);
+  top: 40%; right: -20%;
+}
+
+/* Card Swap Container */
+.scene {
+  position: relative;
+  width: 340px;
+  height: 480px;
+  perspective: 1200px;
+  z-index: 1;
+}
+
+/* Each card slot */
+.card-slot {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+              z-index 0s step-end;
+  cursor: pointer;
+}
+.card-slot.swapping {
+  transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Card visual — 厚实质感 */
+.card {
+  width: 100%; height: 100%;
+  background-color: rgba(20,20,32,0.88);
+  background-image:
+    /* 微光斜扫 */
+    linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 35%, transparent 65%, rgba(16,185,129,0.04) 100%),
+    /* 顶部柔光 */
+    linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 25%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(16,185,129,0.18);
+  border-radius: 2rem;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  /* 3D 挤出厚度 + 环境阴影 */
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04),
+    0 2px 0 0 rgba(0,0,0,0.45),
+    0 3px 0 0 rgba(0,0,0,0.35),
+    0 5px 0 0 rgba(0,0,0,0.25),
+    0 7px 0 0 rgba(0,0,0,0.15),
+    0 9px 0 0 rgba(0,0,0,0.08),
+    0 18px 45px rgba(0,0,0,0.5),
+    0 4px 14px rgba(16,185,129,0.06);
+  transition: box-shadow 0.5s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  /* 内边框 + 顶边高光 + 噪点纹理 */
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06),
+              inset 0 -1px 0 rgba(0,0,0,0.15);
+  pointer-events: none;
+  z-index: 2;
+  /* 胶片噪点 */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+.card-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 4px 12px rgba(16,185,129,0.2));
+}
+.card-title {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #f1f5f9;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+.card-level {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #10b981;
+  margin-bottom: 1.2rem;
+  padding: 0.25rem 0.85rem;
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 9999px;
+}
+/* Progress bar */
+.card-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.card-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  transform-origin: left center;
+  transition: transform 1s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Stack indicators */
+.stack-indicator {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 1;
+}
+.stack-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  transition: all 0.4s;
+}
+.stack-dot.active {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 8px rgba(16,185,129,0.4);
+}
+
+/* Click hint */
+.hint {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #94a3b8;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* ====== Four corner brackets ====== */
+.card::after {
+  content: '';
+  position: absolute; inset: -5px;
+  border-radius: calc(2rem + 6px);
+  pointer-events: none; opacity: 0.3;
+  background:
+    linear-gradient(135deg, #10b981 2px, transparent 2px) 0 0 / 8px 2px no-repeat,
+    linear-gradient(135deg, #10b981 2px, transparent 2px) 0 0 / 2px 8px no-repeat,
+    linear-gradient(225deg, #10b981 2px, transparent 2px) 100% 0 / 8px 2px no-repeat,
+    linear-gradient(225deg, #10b981 2px, transparent 2px) 100% 0 / 2px 8px no-repeat,
+    linear-gradient(45deg, #10b981 2px, transparent 2px) 0 100% / 8px 2px no-repeat,
+    linear-gradient(45deg, #10b981 2px, transparent 2px) 0 100% / 2px 8px no-repeat,
+    linear-gradient(315deg, #10b981 2px, transparent 2px) 100% 100% / 8px 2px no-repeat,
+    linear-gradient(315deg, #10b981 2px, transparent 2px) 100% 100% / 2px 8px no-repeat;
+}
+</style>
+</head>
+<body>
+
+<div class="aurora aurora-1"></div>
+<div class="aurora aurora-2"></div>
+
+<div class="scene" id="scene">
+  <!-- Cards rendered by JS -->
+</div>
+
+<div class="stack-indicator" id="dots"></div>
+<p class="hint">🖱 点击卡片翻转 &nbsp;|&nbsp; 🔄 每 3 秒自动轮播</p>
+
+<script>
+(function() {
+  'use strict';
+
+  // ======================== Card Data ========================
+  const cards = [
+    { icon: '🎯', title: '美女经过时放倒兄弟', level: 'LV.98', pct: 98, color: '#10b981' },
+    { icon: '🌾', title: '星露谷种田效率',     level: 'LV.87', pct: 87, color: '#10b981' },
+    { icon: '🔫', title: '瓦罗兰特爆头率',     level: 'LV.42', pct: 42, color: '#f59e0b' },
+    { icon: '🤖', title: 'AI Prompt 工程',     level: 'LV.65', pct: 65, color: '#10b981' },
+    { icon: '💤', title: '熬夜不猝死抗性',     level: 'LV.73', pct: 73, color: '#f59e0b' },
+    { icon: '🎵', title: '小众音乐鉴赏力',     level: 'LV.91', pct: 91, color: '#10b981' },
+  ];
+
+  const scene = document.getElementById('scene');
+  const dotsContainer = document.getElementById('dots');
+
+  const cardDistance = 60;   // 水平偏移
+  const verticalDistance = 70; // 垂直偏移
+  const delay = 3000;        // 自动轮播间隔
+  const swapDuration = 550;  // 动画时长 ms
+
+  let currentIndex = 0; // 最前面那张卡的索引
+  let autoTimer = null;
+  let isAnimating = false;
+
+  // ======================== Build ========================
+  function buildCards() {
+    scene.innerHTML = '';
+    dotsContainer.innerHTML = '';
+
+    cards.forEach((data, i) => {
+      // Card slot
+      const slot = document.createElement('div');
+      slot.className = 'card-slot';
+      slot.setAttribute('data-index', i);
+      slot.addEventListener('click', () => onCardClick(i));
+
+      // Card inner
+      slot.innerHTML = `
+        <div class="card">
+          <div class="card-icon">${data.icon}</div>
+          <div class="card-title">${data.title}</div>
+          <div class="card-level">${data.level}</div>
+          <div class="card-bar-wrap">
+            <div class="card-bar-fill" style="transform:scaleX(${data.pct / 100}); background:linear-gradient(90deg, ${data.color}, ${data.color}cc)"></div>
+          </div>
+        </div>
+      `;
+
+      scene.appendChild(slot);
+
+      // Dot
+      const dot = document.createElement('span');
+      dot.className = 'stack-dot';
+      dot.addEventListener('click', () => jumpTo(i));
+      dotsContainer.appendChild(dot);
+    });
+
+    updatePositions(false);
+  }
+
+  // ======================== Position Calculation ========================
+  function getStackOrder(i) {
+    // currentIndex is front (0), the rest follow in order
+    const total = cards.length;
+    let position = (i - currentIndex + total) % total;
+    return position;
+  }
+
+  function getPositionStyle(position, total) {
+    if (position === 0) {
+      // Front card — fully visible, slight 3D tilt
+      return {
+        transform: 'translate(0px, 0px) scale(1) rotateX(2deg)',
+        opacity: '1',
+        zIndex: total,
+        pointerEvents: 'auto',
+      };
+    }
+    // Stacked behind — offset diagonally with progressive flattening
+    const scale = 1 - position * 0.04;
+    const opacity = 1 - position * 0.18;
+    const x = position * cardDistance;
+    const y = position * verticalDistance;
+    const tilt = Math.max(0, 5 - position * 2); // 逐渐变平
+    return {
+      transform: `translate(${x}px, ${y}px) scale(${scale}) rotateX(${tilt}deg)`,
+      opacity: String(Math.max(opacity, 0.1)),
+      zIndex: total - position,
+      pointerEvents: position <= 1 ? 'auto' : 'none',
+    };
+  }
+
+  function updatePositions(animate) {
+    const total = cards.length;
+    const slots = scene.querySelectorAll('.card-slot');
+
+    slots.forEach(slot => {
+      const i = parseInt(slot.getAttribute('data-index'));
+      const position = getStackOrder(i);
+      const style = getPositionStyle(position, total);
+
+      if (animate) {
+        slot.classList.add('swapping');
+      }
+
+      slot.style.transform = style.transform;
+      slot.style.opacity = style.opacity;
+      slot.style.zIndex = style.zIndex;
+      slot.style.pointerEvents = style.pointerEvents;
+    });
+
+    // Remove swapping class after animation
+    if (animate) {
+      setTimeout(() => {
+        slots.forEach(s => s.classList.remove('swapping'));
+      }, swapDuration);
+    }
+
+    // Update dots
+    const dots = dotsContainer.querySelectorAll('.stack-dot');
+    dots.forEach((d, i) => {
+      d.classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  // ======================== Swap ========================
+  function swap() {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    currentIndex = (currentIndex + 1) % cards.length;
+    updatePositions(true);
+
+    setTimeout(() => {
+      isAnimating = false;
+    }, swapDuration + 50);
+  }
+
+  function jumpTo(index) {
+    if (isAnimating || index === currentIndex) return;
+    isAnimating = true;
+    currentIndex = index;
+    updatePositions(true);
+
+    resetAutoTimer();
+    setTimeout(() => {
+      isAnimating = false;
+    }, swapDuration + 50);
+  }
+
+  function onCardClick(index) {
+    const position = getStackOrder(index);
+    if (position === 0) {
+      // Front card clicked — flip/swap
+      swap();
+      resetAutoTimer();
+    } else if (position === 1) {
+      // Second card clicked — bring to front
+      jumpTo(index);
+    }
+  }
+
+  // ======================== Auto Timer ========================
+  function resetAutoTimer() {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(swap, delay);
+  }
+
+  // ======================== Init ========================
+  buildCards();
+  resetAutoTimer();
+
+  console.log('%c🃏 CardSwap Demo %c— %c点击卡片或等待 5 秒自动轮播',
+    'color:#10b981;font-size:1.1em;',
+    '', 'color:#94a3b8;');
+})();
+</script>
+</body>
+</html>

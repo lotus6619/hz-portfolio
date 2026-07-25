@@ -138,73 +138,114 @@ body {
 }
 
 /* ============================================================
-   Fluid Island Nav (Dock-inspired)
+   Side Curved Nav (Desktop) — 左侧弧形导航
    ============================================================ */
-.nav {
+.side-nav {
   position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 100;
-  width: calc(100% - 32px);
-  max-width: 600px;
-  background: var(--bg-nav);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  padding: 0 1.5rem;
-  height: 52px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  transition: all 0.4s var(--ease), border-color 0.4s var(--ease);
+  gap: 1.75rem;
 }
-.nav-logo {
+.side-nav-logo {
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: var(--heading);
   text-decoration: none;
   letter-spacing: -0.02em;
   transition: color 0.3s;
 }
-.nav-logo:hover { color: var(--accent); }
+.side-nav-logo:hover { color: var(--accent); }
 
-.nav-links { display: flex; gap: 0.25rem; list-style: none; align-items: center; }
-.nav-links a {
-  display: block;
-  font-size: 0.8rem; font-weight: 500;
-  color: var(--text-dim); text-decoration: none;
-  padding: 0.45rem 1rem;
+.side-nav-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.35) 10%,
+    black 22%,
+    black 78%,
+    rgba(0,0,0,0.35) 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.35) 10%,
+    black 22%,
+    black 78%,
+    rgba(0,0,0,0.35) 90%,
+    transparent 100%
+  );
+  padding: 1rem 0;
+}
+
+.side-nav-item {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 0.55rem 1.1rem;
   border-radius: 9999px;
-  transition: all 0.35s var(--ease);
+  transition: all 0.4s var(--ease);
+  white-space: nowrap;
+  display: block;
+  will-change: transform;
 }
-.nav-links a:hover {
-  color: var(--text);
+.side-nav-item:hover,
+.side-nav-item.active {
+  color: var(--accent);
   background: var(--accent-glow);
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
-/* Dock proximity — adjacent items scale slightly */
-.nav-links a:hover + a,
-.nav-links a:has(+ a:hover) {
-  transform: scale(1.04);
-}
-
-.theme-toggle {
+.side-nav-theme {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   width: 34px; height: 34px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.3s var(--ease);
 }
-.theme-toggle:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
+.side-nav-theme:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.08); }
 
-.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; z-index: 101; }
+/* Blur edge overlays — 边缘模糊层 */
+.nav-blur-top,
+.nav-blur-bottom {
+  position: fixed;
+  left: 10px;
+  width: 100px;
+  height: 55px;
+  pointer-events: none;
+  z-index: 101;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.nav-blur-top {
+  top: 0;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+}
+.nav-blur-bottom {
+  bottom: 0;
+  mask-image: linear-gradient(to top, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 100%);
+}
+
+/* ============================================================
+   Hamburger & Overlay — 移动端菜单
+   ============================================================ */
+.hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; z-index: 102; }
 .hamburger span { display: block; width: 20px; height: 2px; background: var(--text); margin: 4px 0; border-radius: 2px; transition: all 0.3s var(--ease); }
 
 .nav-overlay {
@@ -230,6 +271,7 @@ body {
 .nav-overlay .overlay-links a:nth-child(3) { transition-delay: 0.19s; }
 .nav-overlay .overlay-links a:nth-child(4) { transition-delay: 0.26s; }
 .nav-overlay .overlay-links a:nth-child(5) { transition-delay: 0.33s; }
+.nav-overlay .overlay-links a:nth-child(6) { transition-delay: 0.40s; }
 .nav-overlay .overlay-links a:hover { color: var(--accent); }
 
 /* ============================================================
@@ -757,6 +799,131 @@ body {
 .gb-empty { text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 2rem; }
 
 /* ============================================================
+   Skills CardSwap — 技能卡片轮播
+   ============================================================ */
+.skills-scene {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  height: 440px;
+  margin: 0 auto;
+  perspective: 1200px;
+}
+.skill-card-slot {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+  cursor: pointer;
+}
+.skill-card-slot.swapping {
+  transition: transform 0.55s cubic-bezier(0.32, 0.72, 0, 1),
+              opacity 0.55s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.skill-card {
+  width: 100%; height: 100%;
+  background-color: rgba(20,20,32,0.85);
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 35%, transparent 65%, rgba(16,185,129,0.03) 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 25%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; position: relative; overflow: hidden;
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.04),
+    0 2px 0 0 rgba(0,0,0,0.45),
+    0 3px 0 0 rgba(0,0,0,0.35),
+    0 5px 0 0 rgba(0,0,0,0.25),
+    0 7px 0 0 rgba(0,0,0,0.15),
+    0 9px 0 0 rgba(0,0,0,0.08),
+    0 18px 45px rgba(0,0,0,0.5);
+  transition: border-color 0.5s var(--ease), box-shadow 0.5s ease;
+}
+.skill-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06),
+              inset 0 -1px 0 rgba(0,0,0,0.15);
+  pointer-events: none; z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+[data-theme="light"] .skill-card {
+  background-color: rgba(255,255,255,0.78);
+  background-image:
+    linear-gradient(135deg, rgba(0,0,0,0.02) 0%, transparent 35%, transparent 65%, rgba(5,150,105,0.02) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.01) 0%, transparent 20%);
+  box-shadow:
+    0 1px 0 0 rgba(0,0,0,0.02),
+    0 2px 0 0 rgba(0,0,0,0.06),
+    0 3px 0 0 rgba(0,0,0,0.04),
+    0 5px 0 0 rgba(0,0,0,0.02),
+    0 12px 30px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .skill-card::before {
+  border-color: rgba(0,0,0,0.04);
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.03),
+              inset 0 -1px 0 rgba(0,0,0,0.04);
+}
+
+.skill-card-icon { font-size: 3.2rem; margin-bottom: 1.5rem; position: relative; z-index: 3; }
+.skill-card-title {
+  font-weight: 800; font-size: 1.15rem;
+  color: var(--heading); margin-bottom: 0.75rem;
+  letter-spacing: -0.02em; position: relative; z-index: 3;
+}
+.skill-card-level {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  color: var(--accent); margin-bottom: 1.2rem;
+  padding: 0.25rem 0.85rem;
+  border: 1px solid var(--border-hover);
+  border-radius: 9999px; position: relative; z-index: 3;
+}
+.skill-card-bar-wrap {
+  width: 100%; height: 6px; background: rgba(255,255,255,0.06);
+  border-radius: 3px; overflow: hidden; position: relative; z-index: 3;
+}
+[data-theme="light"] .skill-card-bar-wrap { background: rgba(0,0,0,0.06); }
+.skill-card-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), #34d399);
+  transform-origin: left center;
+  transition: transform 1s ease;
+}
+
+/* Skills dots */
+.skills-dots {
+  display: flex; gap: 0.45rem; justify-content: center; margin-top: 1.25rem;
+}
+.skills-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  border: 1px solid var(--border); background: transparent;
+  cursor: pointer; transition: all 0.3s;
+}
+.skills-dot.active {
+  background: var(--accent); border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.skills-hint {
+  text-align: center; color: var(--text-dim); font-size: 0.75rem;
+  margin-top: 0.75rem; opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+  .skills-scene { height: 400px; }
+  .skill-card { padding: 1.75rem 1.25rem; }
+  .skill-card-icon { font-size: 2.5rem; }
+  .skill-card-title { font-size: 0.95rem; }
+}
+
+/* ============================================================
    Footer
    ============================================================ */
 .footer {
@@ -772,10 +939,14 @@ body {
    Responsive
    ============================================================ */
 @media (max-width: 768px) {
-  /* Nav */
-  .nav-links { display: none; }
+  /* Nav — 移动端紧凑 */
+  .side-nav { left: 6px; gap: 0.9rem; }
+  .side-nav-logo { font-size: 0.9rem; }
+  .side-nav-items { gap: 0.15rem; padding: 0.5rem 0; }
+  .side-nav-item { font-size: 0.68rem; padding: 0.35rem 0.6rem; }
+  .side-nav-theme { width: 28px; height: 28px; font-size: 0.75rem; }
+  .nav-blur-top, .nav-blur-bottom { display: none; }
   .hamburger { display: block; }
-  .nav { max-width: calc(100% - 24px); padding: 0 1rem; height: 48px; }
 
   /* Hero */
   .hero { padding: 5rem 1.25rem 3rem; min-height: auto; }
@@ -854,31 +1025,35 @@ body {
 <canvas id="particleCanvas" class="particle-canvas"></canvas>
 <div class="noise-overlay"></div>
 
+<!-- Side curved nav (Desktop) — 左侧弧形导航 -->
+<nav class="side-nav" id="sideNav">
+  <a href="#" class="side-nav-logo">HZ</a>
+  <div class="side-nav-items" id="sideNavItems">
+    <a href="#about" class="side-nav-item">关于</a>
+    <a href="#skills" class="side-nav-item">技能</a>
+    <a href="#projects" class="side-nav-item">项目</a>
+    <a href="#gallery" class="side-nav-item">画廊</a>
+    <a href="#contact" class="side-nav-item">联系</a>
+    <a href="#guestbook" class="side-nav-item">留言</a>
+  </div>
+  <button class="side-nav-theme" id="themeToggle" aria-label="切换主题">☀</button>
+</nav>
+<div class="nav-blur-top"></div>
+<div class="nav-blur-bottom"></div>
+
 <!-- Phone frame -->
 <div class="phone-frame">
 <!-- Perspective wrapper for ring effect -->
 <div class="perspective-wrapper">
 
-<!-- ============================================================
-     Nav
-     ============================================================ -->
-<nav class="nav" id="nav">
-  <a href="#" class="nav-logo">HZ</a>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="#about">关于</a></li>
-    <li><a href="#projects">项目</a></li>
-    <li><a href="#gallery">画廊</a></li>
-    <li><a href="#contact">联系</a></li>
-    <li><a href="#guestbook">留言</a></li>
-  </ul>
-  <button class="theme-toggle" id="themeToggle" aria-label="切换主题">☀</button>
-  <button class="hamburger" id="hamburger" aria-label="菜单">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
+<!-- Mobile hamburger (小屏备用) -->
+<button class="hamburger" id="hamburger" aria-label="菜单" style="position:fixed;top:16px;right:16px;z-index:102;">
+  <span></span><span></span><span></span>
+</button>
 <div class="nav-overlay" id="navOverlay">
   <ul class="overlay-links">
     <li><a href="#about">关于</a></li>
+    <li><a href="#skills">技能</a></li>
     <li><a href="#projects">项目</a></li>
     <li><a href="#gallery">画廊</a></li>
     <li><a href="#contact">联系</a></li>
@@ -943,6 +1118,19 @@ body {
     </div>
     </div>
   </div>
+</section>
+
+<!-- ============================================================
+     Skills — 技能卡片轮播
+     ============================================================ -->
+<section class="section reveal" id="skills">
+  <span class="section-label">SKILLS</span>
+  <h2 class="section-title">技能树</h2>
+  <p class="section-sub">地球online玩家属性面板。</p>
+
+  <div class="skills-scene" id="skillsScene"></div>
+  <div class="skills-dots" id="skillsDots"></div>
+  <p class="skills-hint">🖱 点击卡片翻转 &nbsp;|&nbsp; 🔄 自动轮播</p>
 </section>
 
 <!-- ============================================================
@@ -1346,7 +1534,8 @@ body {
   const saved = localStorage.getItem('hz-theme-v2');
   if (saved) html.setAttribute('data-theme', saved);
   function updateIcon() {
-    themeToggle.textContent = html.getAttribute('data-theme') === 'dark' ? '☀' : '☾';
+    const icon = html.getAttribute('data-theme') === 'dark' ? '☀' : '☾';
+    if (themeToggle) themeToggle.textContent = icon;
   }
   updateIcon();
   themeToggle.addEventListener('click', () => {
@@ -1382,6 +1571,47 @@ body {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeMenu(); });
   overlay.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen) closeMenu(); });
+
+  // ======================== Side Nav Curve — 弧形曲线 + 滚动高亮 ========================
+  const sideNavItems = document.querySelectorAll('.side-nav-item');
+  function updateNavCurve() {
+    const count = sideNavItems.length;
+    if (count === 0) return;
+    const centerIdx = (count - 1) / 2;
+    const isMobile = window.innerWidth <= 768;
+    const maxTilt = isMobile ? 3 : 6;
+    sideNavItems.forEach((item, i) => {
+      const offset = (i - centerIdx) / Math.max(centerIdx, 1);
+      const angle = offset * maxTilt;
+      item.style.transform = `rotate(${angle}deg)`;
+    });
+  }
+  window.addEventListener('resize', updateNavCurve);
+  updateNavCurve();
+
+  // Scroll-based active section tracking
+  const navSections = [];
+  sideNavItems.forEach(item => {
+    const id = item.getAttribute('href');
+    if (id && id.startsWith('#')) {
+      const section = document.querySelector(id);
+      if (section) navSections.push({ item, section });
+    }
+  });
+  function updateActiveNav() {
+    const vh = window.innerHeight;
+    let activeItem = null;
+    navSections.forEach(({ item, section }) => {
+      const rect = section.getBoundingClientRect();
+      if (rect.top <= vh * 0.4 && rect.bottom >= vh * 0.1) {
+        activeItem = item;
+      }
+    });
+    sideNavItems.forEach(item => item.classList.remove('active'));
+    if (activeItem) activeItem.classList.add('active');
+  }
+  window.addEventListener('scroll', updateActiveNav, { passive: true });
+  updateActiveNav();
 
   // ======================== SpotlightCard ========================
   document.querySelectorAll('[data-spotlight]').forEach(card => {
@@ -1473,6 +1703,116 @@ body {
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
   reveals.forEach(el => obs.observe(el));
+
+  // ======================== Skills CardSwap — 技能卡片轮播 ========================
+  const skillsData = [
+    { icon: '🎯', title: '美女经过时放倒兄弟', level: 'LV.98', pct: 98, clr: '#10b981' },
+    { icon: '🌾', title: '星露谷种田效率',     level: 'LV.87', pct: 87, clr: '#10b981' },
+    { icon: '🔫', title: '瓦罗兰特爆头率',     level: 'LV.42', pct: 42, clr: '#f59e0b' },
+    { icon: '🤖', title: 'AI Prompt 工程',     level: 'LV.65', pct: 65, clr: '#10b981' },
+    { icon: '💤', title: '熬夜不猝死抗性',     level: 'LV.73', pct: 73, clr: '#f59e0b' },
+    { icon: '🎵', title: '小众音乐鉴赏力',     level: 'LV.91', pct: 91, clr: '#10b981' },
+  ];
+
+  const skillsScene = document.getElementById('skillsScene');
+  const skillsDots = document.getElementById('skillsDots');
+  if (skillsScene && skillsDots) {
+    const CD = 60;   // horizontal distance
+    const VD = 70;   // vertical distance
+    const SD = 3000; // auto-swap interval ms
+    const swapDur = 550;
+    let skillIdx = 0;
+    let skillTimer = null;
+    let skillBusy = false;
+
+    function getStackPos(i) {
+      const n = skillsData.length;
+      return (i - skillIdx + n) % n;
+    }
+
+    function getStyle(pos, n) {
+      if (pos === 0) {
+        return { transform: 'translate(0px, 0px) scale(1) rotateX(2deg)', opacity: '1', zIndex: n, ptr: 'auto' };
+      }
+      const s = 1 - pos * 0.04;
+      const o = Math.max(1 - pos * 0.18, 0.1);
+      const tilt = Math.max(0, 5 - pos * 2);
+      return {
+        transform: `translate(${pos * CD}px, ${pos * VD}px) scale(${s}) rotateX(${tilt}deg)`,
+        opacity: String(o),
+        zIndex: n - pos,
+        ptr: pos <= 1 ? 'auto' : 'none',
+      };
+    }
+
+    function applyPositions(anim) {
+      const slots = skillsScene.querySelectorAll('.skill-card-slot');
+      const n = skillsData.length;
+      slots.forEach(s => {
+        const i = parseInt(s.getAttribute('data-idx'));
+        const pos = getStackPos(i);
+        const st = getStyle(pos, n);
+        if (anim) s.classList.add('swapping');
+        s.style.transform = st.transform;
+        s.style.opacity = st.opacity;
+        s.style.zIndex = st.zIndex;
+        s.style.pointerEvents = st.ptr;
+      });
+      if (anim) setTimeout(() => slots.forEach(s => s.classList.remove('swapping')), swapDur);
+      skillsDots.querySelectorAll('.skills-dot').forEach((d, i) => d.classList.toggle('active', i === skillIdx));
+    }
+
+    function doSwap() {
+      if (skillBusy) return;
+      skillBusy = true;
+      skillIdx = (skillIdx + 1) % skillsData.length;
+      applyPositions(true);
+      setTimeout(() => { skillBusy = false; }, swapDur + 50);
+    }
+
+    function jumpSkill(idx) {
+      if (skillBusy || idx === skillIdx) return;
+      skillBusy = true;
+      skillIdx = idx;
+      applyPositions(true);
+      resetSkillTimer();
+      setTimeout(() => { skillBusy = false; }, swapDur + 50);
+    }
+
+    function resetSkillTimer() {
+      clearInterval(skillTimer);
+      skillTimer = setInterval(doSwap, SD);
+    }
+
+    // Build
+    skillsData.forEach((d, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'skill-card-slot';
+      slot.setAttribute('data-idx', i);
+      slot.innerHTML = `<div class="skill-card">
+        <div class="skill-card-icon">${d.icon}</div>
+        <div class="skill-card-title">${d.title}</div>
+        <div class="skill-card-level">${d.level}</div>
+        <div class="skill-card-bar-wrap">
+          <div class="skill-card-bar-fill" style="transform:scaleX(${d.pct / 100}); background:linear-gradient(90deg, ${d.clr}, ${d.clr}cc)"></div>
+        </div>
+      </div>`;
+      slot.addEventListener('click', () => {
+        const pos = getStackPos(i);
+        if (pos === 0) { doSwap(); resetSkillTimer(); }
+        else if (pos === 1) jumpSkill(i);
+      });
+      skillsScene.appendChild(slot);
+
+      const dot = document.createElement('span');
+      dot.className = 'skills-dot';
+      dot.addEventListener('click', () => jumpSkill(i));
+      skillsDots.appendChild(dot);
+    });
+
+    applyPositions(false);
+    resetSkillTimer();
+  }
 
   console.log('%c🟢 赫兹 HZ · Demo v2', 'color:#10b981;font-size:1.2em;font-weight:800;');
   console.log('%cAurora bg + Noise + FluidGlass + Spotlight + Magnet + Lenis + BlurText', 'color:#94a3b8;');

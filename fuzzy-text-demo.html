@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuzzyText Demo — 毛刺文字效果</title>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+  background: #08080a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+  padding: 2rem;
+}
+
+.aurora {
+  position: fixed; border-radius: 50%; filter: blur(120px);
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
+.aurora-1 {
+  width: 70vw; height: 70vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%);
+  top: -25%; left: -10%;
+}
+.aurora-2 {
+  width: 50vw; height: 50vw;
+  background: radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 65%);
+  bottom: -15%; right: -15%;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+/* Section label */
+.section-label {
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
+  color: #10b981; padding: 0.25rem 0.8rem;
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 9999px;
+}
+
+/* Fuzzy canvas wrappers */
+.fuzzy-wrap {
+  position: relative;
+  cursor: default;
+}
+.fuzzy-wrap canvas {
+  display: block;
+}
+
+/* Skills grid */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 800px;
+}
+@media (max-width: 700px) {
+  .skills-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 450px) {
+  .skills-grid { grid-template-columns: 1fr; }
+}
+
+.skill-card {
+  background: rgba(18,18,26,0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 1.5rem;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: border-color 0.4s;
+}
+.skill-card:hover {
+  border-color: rgba(16,185,129,0.25);
+}
+.skill-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+.skill-level {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #10b981;
+  margin-bottom: 0.75rem;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 9999px;
+}
+.skill-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transform-origin: left center;
+  transition: transform 1s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ctrl-btn {
+  font-family: inherit; font-size: 0.8rem; font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px; border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(18,18,26,0.5);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.ctrl-btn:hover { border-color: #10b981; color: #10b981; }
+.ctrl-btn.on { background: rgba(16,185,129,0.15); border-color: #10b981; color: #10b981; }
+
+.hint {
+  font-size: 0.75rem; color: #64748b;
+  margin-top: -1rem;
+}
+</style>
+</head>
+<body>
+
+<div class="aurora aurora-1"></div>
+<div class="aurora aurora-2"></div>
+
+<div class="container">
+
+  <!-- Section title with fuzzy effect -->
+  <span class="section-label">SKILL TREE</span>
+
+  <div class="fuzzy-wrap" id="fuzzyTitle"></div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="ctrl-btn" data-mode="hover" id="btnHover">🖱 悬停增强</button>
+    <button class="ctrl-btn" data-mode="glitch" id="btnGlitch">⚡ 周期故障</button>
+    <button class="ctrl-btn" data-mode="click" id="btnClick">👆 点击爆发</button>
+    <button class="ctrl-btn" data-mode="direction" id="btnDir">↔ 水平方向</button>
+  </div>
+
+  <p class="hint">鼠标划过标题文字看毛刺效果 &nbsp;|&nbsp; 按钮切换模式</p>
+
+  <!-- Skills cards with fuzzy names -->
+  <div class="skills-grid" id="skillsGrid">
+    <!-- JS 填充 -->
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ======================== FuzzyText Engine ========================
+  class FuzzyText {
+    constructor(canvas, text, opts = {}) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.text = text;
+
+      this.fontSize = opts.fontSize || 48;
+      this.fontWeight = opts.fontWeight || 900;
+      this.fontFamily = opts.fontFamily || 'Cabinet Grotesk, sans-serif';
+      this.color = opts.color || '#f1f5f9';
+      this.baseIntensity = opts.baseIntensity ?? 0.18;
+      this.hoverIntensity = opts.hoverIntensity ?? 0.5;
+      this.fuzzRange = opts.fuzzRange ?? 30;
+      this.fps = opts.fps ?? 60;
+      this.direction = opts.direction || 'horizontal';
+      this.transitionDuration = opts.transitionDuration ?? 300;
+      this.clickEffect = opts.clickEffect ?? false;
+      this.glitchMode = opts.glitchMode ?? false;
+      this.glitchInterval = opts.glitchInterval ?? 2000;
+      this.glitchDuration = opts.glitchDuration ?? 200;
+      this.gradient = opts.gradient || null;
+
+      this.currentIntensity = this.baseIntensity;
+      this.targetIntensity = this.baseIntensity;
+      this.isHovering = false;
+      this.isClicking = false;
+      this.isGlitching = false;
+      this.lastFrameTime = 0;
+      this.frameDuration = 1000 / this.fps;
+      this.animId = null;
+      this.isCancelled = false;
+
+      this.interactiveRect = null; // {left, top, right, bottom} in canvas coords
+      this.offscreenCanvas = null;
+
+      this._glitchLoopTimer = null;
+      this._clickTimer = null;
+
+      this._init();
+    }
+
+    async _init() {
+      const canvas = this.canvas;
+      const ctx = this.ctx;
+      if (!ctx) return;
+
+      // Load fonts
+      const fontSizeStr = typeof this.fontSize === 'number' ? `${this.fontSize}px` : this.fontSize;
+      const fontString = `${this.fontWeight} ${fontSizeStr} ${this.fontFamily}`;
+
+      try { await document.fonts.load(fontString); } catch(e) { await document.fonts.ready; }
+      if (this.isCancelled) return;
+
+      // Compute numeric font size
+      let numericFontSize;
+      if (typeof this.fontSize === 'number') {
+        numericFontSize = this.fontSize;
+      } else {
+        const temp = document.createElement('span');
+        temp.style.fontSize = this.fontSize;
+        document.body.appendChild(temp);
+        numericFontSize = parseFloat(window.getComputedStyle(temp).fontSize);
+        document.body.removeChild(temp);
+      }
+
+      // Offscreen canvas: render clean text
+      const offscreen = document.createElement('canvas');
+      const offCtx = offscreen.getContext('2d');
+      offCtx.font = fontString;
+      offCtx.textBaseline = 'alphabetic';
+
+      const textWidth = offCtx.measureText(this.text).width;
+      const metrics = offCtx.measureText(this.text);
+      const ascent = metrics.actualBoundingBoxAscent ?? numericFontSize;
+      const descent = metrics.actualBoundingBoxDescent ?? numericFontSize * 0.2;
+      const tightHeight = Math.ceil(ascent + descent);
+      const offscreenW = Math.ceil(textWidth) + 10;
+      const offscreenH = tightHeight;
+
+      offscreen.width = offscreenW;
+      offscreen.height = offscreenH;
+      offCtx.font = fontString;
+      offCtx.textBaseline = 'alphabetic';
+
+      if (this.gradient && this.gradient.length >= 2) {
+        const grad = offCtx.createLinearGradient(0, 0, offscreenW, 0);
+        this.gradient.forEach((c, i) => grad.addColorStop(i / (this.gradient.length - 1), c));
+        offCtx.fillStyle = grad;
+      } else {
+        offCtx.fillStyle = this.color;
+      }
+      offCtx.fillText(this.text, 5, ascent);
+
+      this.offscreenCanvas = offscreen;
+
+      // Main canvas size
+      const margin = this.fuzzRange + 20;
+      this.canvas.width = offscreenW + margin * 2;
+      this.canvas.height = offscreenH;
+      this.canvas.style.width = (offscreenW + margin * 2) + 'px';
+      this.canvas.style.height = offscreenH + 'px';
+
+      // Interactive area (text bounding box in canvas coords)
+      this.interactiveRect = {
+        left: margin,
+        top: 0,
+        right: margin + textWidth,
+        bottom: offscreenH,
+      };
+
+      ctx.setTransform(1, 0, 0, 1, margin, 0);
+
+      // Event listeners
+      if (opts.enableHover !== false) {
+        canvas.addEventListener('mousemove', e => this._onMouseMove(e));
+        canvas.addEventListener('mouseleave', () => { this.isHovering = false; });
+      }
+      if (this.clickEffect) {
+        canvas.addEventListener('click', () => this._onClick());
+      }
+      // Touch
+      canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const t = e.touches[0];
+        this._checkHover(t.clientX - rect.left, t.clientY - rect.top);
+      }, { passive: false });
+      canvas.addEventListener('touchend', () => { this.isHovering = false; });
+
+      if (this.glitchMode) this._startGlitchLoop();
+
+      // Start render loop
+      this._render(0);
+    }
+
+    _onMouseMove(e) {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      this._checkHover(x, y);
+    }
+
+    _checkHover(x, y) {
+      if (!this.interactiveRect) return;
+      const r = this.interactiveRect;
+      this.isHovering = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    }
+
+    _onClick() {
+      this.isClicking = true;
+      clearTimeout(this._clickTimer);
+      this._clickTimer = setTimeout(() => { this.isClicking = false; }, 150);
+    }
+
+    _startGlitchLoop() {
+      const loop = () => {
+        if (this.isCancelled) return;
+        this.isGlitching = true;
+        this._glitchLoopTimer = setTimeout(() => {
+          this.isGlitching = false;
+          this._glitchLoopTimer = setTimeout(loop, this.glitchInterval);
+        }, this.glitchDuration);
+      };
+      this._glitchLoopTimer = setTimeout(loop, this.glitchInterval);
+    }
+
+    _render(timestamp) {
+      if (this.isCancelled) return;
+
+      if (timestamp - this.lastFrameTime < this.frameDuration) {
+        this.animId = requestAnimationFrame(t => this._render(t));
+        return;
+      }
+      this.lastFrameTime = timestamp;
+
+      const ctx = this.ctx;
+      const offscreen = this.offscreenCanvas;
+      if (!ctx || !offscreen) {
+        this.animId = requestAnimationFrame(t => this._render(t));
+        return;
+      }
+
+      // Determine target intensity
+      if (this.isClicking) this.targetIntensity = 1;
+      else if (this.isGlitching) this.targetIntensity = 1;
+      else if (this.isHovering) this.targetIntensity = this.hoverIntensity;
+      else this.targetIntensity = this.baseIntensity;
+
+      // Smooth transition
+      const step = this.transitionDuration > 0
+        ? 1 / (this.transitionDuration / this.frameDuration)
+        : 1;
+      if (this.currentIntensity < this.targetIntensity) {
+        this.currentIntensity = Math.min(this.currentIntensity + step, this.targetIntensity);
+      } else if (this.currentIntensity > this.targetIntensity) {
+        this.currentIntensity = Math.max(this.currentIntensity - step, this.targetIntensity);
+      }
+
+      const I = this.currentIntensity;
+      const range = this.fuzzRange;
+      const w = offscreen.width;
+      const h = offscreen.height;
+
+      // Clear with extra margin
+      ctx.clearRect(-this.fuzzRange - 20, -10, w + 2 * (this.fuzzRange + 20), h + 20);
+
+      if (this.direction === 'horizontal') {
+        for (let row = 0; row < h; row++) {
+          const dx = Math.floor(I * (Math.random() - 0.5) * range);
+          ctx.drawImage(offscreen, 0, row, w, 1, dx, row, w, 1);
+        }
+      } else if (this.direction === 'vertical') {
+        for (let col = 0; col < w; col++) {
+          const dy = Math.floor(I * (Math.random() - 0.5) * range);
+          ctx.drawImage(offscreen, col, 0, 1, h, col, dy, 1, h);
+        }
+      } else {
+        // Both directions: two-pass
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = w + range;
+        tempCanvas.height = h + range;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        for (let row = 0; row < h; row++) {
+          const dx = Math.floor(I * (Math.random() - 0.5) * range * 0.7);
+          tempCtx.drawImage(offscreen, 0, row, w, 1, dx + range / 2, row, w, 1);
+        }
+        for (let col = 0; col < w + range; col++) {
+          const dy = Math.floor(I * (Math.random() - 0.5) * range * 0.5);
+          ctx.drawImage(tempCanvas, col, 0, 1, h + range, col, dy, 1, h + range);
+        }
+      }
+
+      this.animId = requestAnimationFrame(t => this._render(t));
+    }
+
+    setDirection(d) { this.direction = d; }
+    setGlitchMode(on) {
+      this.glitchMode = on;
+      if (on) this._startGlitchLoop();
+      else {
+        clearTimeout(this._glitchLoopTimer);
+        this.isGlitching = false;
+      }
+    }
+    setClickEffect(on) { this.clickEffect = on; }
+    destroy() {
+      this.isCancelled = true;
+      cancelAnimationFrame(this.animId);
+      clearTimeout(this._glitchLoopTimer);
+      clearTimeout(this._clickTimer);
+    }
+  }
+
+  // ======================== Build Demo ========================
+  const fuzzyTitleCanvas = document.createElement('canvas');
+  document.getElementById('fuzzyTitle').appendChild(fuzzyTitleCanvas);
+
+  const titleFuzzy = new FuzzyText(fuzzyTitleCanvas, '技 能 树', {
+    fontSize: 'clamp(2.5rem, 8vw, 5rem)',
+    fontWeight: 900,
+    fontFamily: 'Cabinet Grotesk, sans-serif',
+    color: '#f1f5f9',
+    baseIntensity: 0.18,
+    hoverIntensity: 0.5,
+    fuzzRange: 30,
+    fps: 60,
+    direction: 'horizontal',
+    transitionDuration: 300,
+    clickEffect: false,
+    glitchMode: false,
+    glitchInterval: 2000,
+    glitchDuration: 200,
+  });
+
+  // Skill cards with mini fuzzy labels
+  const skills = [
+    { icon: '🎯', title: '美女经过时放倒兄弟', level: 'LV.98', pct: 98, color: '#10b981' },
+    { icon: '🌾', title: '星露谷种田效率',     level: 'LV.87', pct: 87, color: '#10b981' },
+    { icon: '🔫', title: '瓦罗兰特爆头率',     level: 'LV.42', pct: 42, color: '#f59e0b' },
+    { icon: '🤖', title: 'AI Prompt 工程',     level: 'LV.65', pct: 65, color: '#10b981' },
+    { icon: '💤', title: '熬夜不猝死抗性',     level: 'LV.73', pct: 73, color: '#f59e0b' },
+    { icon: '🎵', title: '小众音乐鉴赏力',     level: 'LV.91', pct: 91, color: '#10b981' },
+  ];
+
+  const grid = document.getElementById('skillsGrid');
+  const miniFuzzies = [];
+
+  skills.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'skill-card';
+
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'fuzzy-wrap';
+    const nameCanvas = document.createElement('canvas');
+    nameWrap.appendChild(nameCanvas);
+
+    card.innerHTML = `
+      <div class="skill-icon">${s.icon}</div>
+      <div class="skill-level">${s.level}</div>
+      <div class="skill-bar-wrap">
+        <div class="skill-bar-fill" style="transform:scaleX(${s.pct / 100}); background:linear-gradient(90deg, ${s.color}, ${s.color}cc)"></div>
+      </div>
+    `;
+
+    // Insert name canvas after icon, before level
+    const iconEl = card.querySelector('.skill-icon');
+    iconEl.after(nameWrap);
+
+    grid.appendChild(card);
+
+    // Mini fuzzy text for skill name
+    const mini = new FuzzyText(nameCanvas, s.title, {
+      fontSize: '0.9rem',
+      fontWeight: 700,
+      fontFamily: 'Cabinet Grotesk, sans-serif',
+      color: '#e2e8f0',
+      baseIntensity: 0.12,
+      hoverIntensity: 0.45,
+      fuzzRange: 12,
+      fps: 60,
+      direction: 'horizontal',
+      transitionDuration: 250,
+      clickEffect: false,
+      glitchMode: false,
+    });
+    miniFuzzies.push(mini);
+  });
+
+  // ======================== Controls ========================
+  const btnHover = document.getElementById('btnHover');
+  const btnGlitch = document.getElementById('btnGlitch');
+  const btnClick = document.getElementById('btnClick');
+  const btnDir = document.getElementById('btnDir');
+
+  let hoverEnabled = true;
+  let glitchOn = false;
+  let clickOn = false;
+  let dirMode = 'horizontal';
+
+  btnHover.classList.add('on'); // default
+
+  btnHover.addEventListener('click', () => {
+    hoverEnabled = !hoverEnabled;
+    btnHover.classList.toggle('on', hoverEnabled);
+    const opts = { enableHover: hoverEnabled };
+    titleFuzzy.isHovering = false; // reset on disable
+    // Re-set the event listener approach: just toggle hovering check
+    // Since we can't easily remove listeners, we'll set baseIntensity high when disabled
+    if (!hoverEnabled) {
+      titleFuzzy.isHovering = false;
+    }
+  });
+
+  btnGlitch.addEventListener('click', () => {
+    glitchOn = !glitchOn;
+    btnGlitch.classList.toggle('on', glitchOn);
+    titleFuzzy.setGlitchMode(glitchOn);
+  });
+
+  btnClick.addEventListener('click', () => {
+    clickOn = !clickOn;
+    btnClick.classList.toggle('on', clickOn);
+    titleFuzzy.setClickEffect(clickOn);
+    if (!clickOn) {
+      titleFuzzy.isClicking = false;
+    }
+  });
+
+  btnDir.addEventListener('click', () => {
+    const dirs = ['horizontal', 'vertical', 'both'];
+    const labels = ['↔ 水平方向', '↕ 垂直方向', '✥ 双向'];
+    const idx = dirs.indexOf(dirMode);
+    dirMode = dirs[(idx + 1) % 3];
+    btnDir.textContent = labels[(idx + 1) % 3];
+    titleFuzzy.setDirection(dirMode);
+  });
+
+  console.log('%c🌀 FuzzyText Demo %c— %c鼠标划过标题看毛刺效果',
+    'color:#10b981;font-size:1.1em;', '', 'color:#94a3b8;');
+})();
+</script>
+</body>
+</html>
